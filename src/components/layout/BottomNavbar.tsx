@@ -7,8 +7,8 @@ import {
 import {
   Home as HomeIcon,
   Search as SearchIcon,
-  PersonAdd as PersonAddIcon,
-  Groups as GroupsIcon,
+  Add as AddIcon,
+  Business as BusinessIcon,
   List as ListIcon,
   Help as HelpIcon,
 } from '@mui/icons-material';
@@ -21,8 +21,8 @@ interface BottomNavbarProps {
 const navigationItems = [
   { label: 'Home', icon: <HomeIcon />, path: '/', title: 'Home' },
   { label: 'Search', icon: <SearchIcon />, path: '/search', title: 'Search Duty Stations' },
-  { label: 'Add', icon: <PersonAddIcon />, path: '/duty-station-request', title: 'Add New Duty Station' },
-  { label: 'Stations', icon: <GroupsIcon />, path: '/duty-stations', title: 'Duty Stations List' },
+  { label: 'Add', icon: <AddIcon />, path: '/duty-station-request', title: 'Add New Duty Station' },
+  { label: 'Stations', icon: <BusinessIcon />, path: '/duty-stations', title: 'Duty Stations List' },
   { label: 'Requests', icon: <ListIcon />, path: '/requests-list', title: 'Requests' },
   { label: 'Help', icon: <HelpIcon />, path: '/help', title: 'Help' },
 ];
@@ -47,22 +47,53 @@ function BottomNavbar({ requestCount }: BottomNavbarProps) {
         bottom: 0, 
         left: 0, 
         right: 0,
-        zIndex: (theme) => theme.zIndex.appBar
+        zIndex: (theme) => theme.zIndex.appBar,
+        borderTop: '1px solid #e0e0e0'
       }} 
       elevation={8}
     >
       <BottomNavigation
         value={getCurrentValue()}
         onChange={handleChange}
-        showLabels={false} // Hide labels to match CEB design
+        showLabels={false}
+        sx={{
+          height: 56,
+          backgroundColor: '#fafafa',
+          '& .MuiBottomNavigationAction-root': {
+            minWidth: 'auto',
+            padding: '6px 12px 8px',
+            '&.Mui-selected': {
+              color: '#008fd5',
+              '& .MuiBottomNavigationAction-label': {
+                fontSize: '0.75rem',
+                fontWeight: 600
+              }
+            },
+            '&:not(.Mui-selected)': {
+              color: '#757575'
+            }
+          }
+        }}
       >
-        {navigationItems.map((item, index) => (
+        {navigationItems.map((item) => (
           <BottomNavigationAction
             key={item.path}
             title={item.title}
             icon={
               item.label === 'Requests' && requestCount > 0 ? (
-                <Badge badgeContent={requestCount} color="secondary">
+                <Badge 
+                  badgeContent={requestCount} 
+                  color="secondary"
+                  sx={{
+                    '& .MuiBadge-badge': {
+                      backgroundColor: '#ff4444',
+                      color: 'white',
+                      fontSize: '0.7rem',
+                      minWidth: '16px',
+                      height: '16px'
+                    }
+                  }}
+                >
                   {item.icon}
                 </Badge>
               ) : (

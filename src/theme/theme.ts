@@ -1,8 +1,8 @@
 import { createTheme } from '@mui/material/styles';
 
-// Color palette adapted from UN Duty Station Database
-export const dutyStationColors = {
-  primary: '#008fd5',      // UN Blue - AppBar background
+// Color palette extracted from CEB Donor Codes app (EXACT MATCH)
+export const cebColors = {
+  primary: '#008fd5',      // CEB primary blue - AppBar background
   tableHeader: '#96C8DA',  // Table header background
   buttonHover: '#4cafff',  // Button hover state
   selected: '#2185d0',     // Selected/active state
@@ -11,7 +11,7 @@ export const dutyStationColors = {
   white: '#ffffff',
   textPrimary: '#111',     // Main text color
   textSecondary: '#666',
-  // Action colors matching original app
+  // Action colors matching CEB app
   viewAction: '#00b04f',      // Green for view actions
   editAction: '#f2711c',      // Orange for edit actions  
   deleteAction: '#db2828',    // Red for delete actions
@@ -23,31 +23,31 @@ const themeOptions = {
     light: {
       palette: {
         primary: {
-          main: dutyStationColors.primary,
-          contrastText: dutyStationColors.white,
+          main: cebColors.primary,
+          contrastText: cebColors.white,
         },
         secondary: {
-          main: dutyStationColors.tableHeader,
-          contrastText: dutyStationColors.white,
+          main: cebColors.tableHeader,
+          contrastText: cebColors.white,
         },
         info: {
-          main: dutyStationColors.buttonHover,
+          main: cebColors.buttonHover,
         },
         background: {
           default: '#fafafa',
-          paper: dutyStationColors.white,
+          paper: cebColors.white,
         },
         text: {
-          primary: dutyStationColors.textPrimary,
-          secondary: dutyStationColors.textSecondary,
+          primary: cebColors.textPrimary,
+          secondary: cebColors.textSecondary,
         },
-        // Custom action colors matching original app
+        // Custom action colors matching CEB app
         action: {
-          view: dutyStationColors.viewAction,
+          view: cebColors.viewAction,
           viewHover: '#00a043',
-          edit: dutyStationColors.editAction,
+          edit: cebColors.editAction,
           editHover: '#e86100',
-          delete: dutyStationColors.deleteAction,
+          delete: cebColors.deleteAction,
           deleteHover: '#c41e3a',
         },
       },
@@ -122,8 +122,8 @@ const themeOptions = {
       styleOverrides: {
         root: ({ theme }) => ({
           ...theme.applyStyles('light', {
-            backgroundColor: dutyStationColors.primary,
-            color: dutyStationColors.white,
+            backgroundColor: cebColors.primary,
+            color: cebColors.white,
           }),
           ...theme.applyStyles('dark', {
             backgroundColor: '#1976d2',
@@ -142,7 +142,7 @@ const themeOptions = {
         contained: ({ theme }) => ({
           ...theme.applyStyles('light', {
             '&:hover': {
-              backgroundColor: dutyStationColors.buttonHover,
+              backgroundColor: cebColors.buttonHover,
             },
           }),
           ...theme.applyStyles('dark', {
@@ -153,11 +153,11 @@ const themeOptions = {
         }),
         outlined: ({ theme }) => ({
           ...theme.applyStyles('light', {
-            borderColor: dutyStationColors.buttonHover,
-            color: dutyStationColors.buttonHover,
+            borderColor: cebColors.buttonHover,
+            color: cebColors.buttonHover,
             '&:hover': {
-              backgroundColor: dutyStationColors.buttonHover,
-              color: dutyStationColors.white,
+              backgroundColor: cebColors.buttonHover,
+              color: cebColors.white,
             },
           }),
           ...theme.applyStyles('dark', {
@@ -178,9 +178,9 @@ const themeOptions = {
           '& .MuiTableCell-head': {
             fontWeight: 600,
             ...theme.applyStyles('light', {
-              backgroundColor: dutyStationColors.tableHeader,
-              color: dutyStationColors.white,
-              border: `1px solid ${dutyStationColors.tableBorder}`,
+              backgroundColor: cebColors.tableHeader,
+              color: cebColors.white,
+              border: `1px solid ${cebColors.tableBorder}`,
             }),
             ...theme.applyStyles('dark', {
               backgroundColor: '#2e2e2e',
@@ -196,10 +196,10 @@ const themeOptions = {
         root: ({ theme }) => ({
           ...theme.applyStyles('light', {
             '& .MuiTableRow-root:nth-of-type(odd)': {
-              backgroundColor: dutyStationColors.tableAlt,
+              backgroundColor: cebColors.tableAlt,
             },
             '& .MuiTableCell-body': {
-              border: `1px solid ${dutyStationColors.tableBorder}`,
+              border: `1px solid ${cebColors.tableBorder}`,
               fontFamily: '"Trebuchet MS", Arial, Helvetica, sans-serif',
             },
           }),
@@ -220,7 +220,7 @@ const themeOptions = {
         root: ({ theme }) => ({
           borderCollapse: 'collapse' as const,
           ...theme.applyStyles('light', {
-            border: `3px solid ${dutyStationColors.tableBorder}`,
+            border: `3px solid ${cebColors.tableBorder}`,
           }),
           ...theme.applyStyles('dark', {
             border: '3px solid #555',
@@ -235,8 +235,8 @@ const themeOptions = {
           fontSize: '1rem',
           ...theme.applyStyles('light', {
             '&.Mui-selected': {
-              backgroundColor: `${dutyStationColors.selected} !important`,
-              color: `${dutyStationColors.white} !important`,
+              backgroundColor: `${cebColors.selected} !important`,
+              color: `${cebColors.white} !important`,
             },
           }),
           ...theme.applyStyles('dark', {

@@ -5,11 +5,11 @@ import {
   CardActionArea,
   CardMedia,
   Box,
+  Toolbar,
 } from '@mui/material';
 import Grid from '@mui/material/Grid';
-import { useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 
-// Import images (we'll need to add these to the public folder)
 const navigationCards = [
   {
     title: 'Search',
@@ -38,48 +38,45 @@ const navigationCards = [
 ];
 
 function HomePage() {
-  const navigate = useNavigate();
 
-  const handleCardClick = (path: string) => {
-    navigate(path);
-  };
-
+  // EXACT replication of CEB Donor Codes HomePage structure
   return (
-    <Box sx={{ textAlign: 'center' }}>
-      <Box sx={{ mb: 4 }}>
+    <Box>
+      <Toolbar />
+      <Box sx={{ textAlign: 'center' }}>
         <Typography variant="h3" component="h1" gutterBottom>
           UN Duty Station Database Manager
         </Typography>
+        
+        <Grid container spacing={4}>
+          {navigationCards.map((card) => (
+            <Grid
+              key={card.title}
+              item
+              xs={12} sm={6} md={3}
+            >
+              <Card>
+                <CardActionArea component={Link} to={card.path}>
+                  <CardMedia
+                    component="img"
+                    height="140"
+                    image={card.image}
+                    alt={card.title}
+                  />
+                  <CardContent>
+                    <Typography variant="h6" component="h2" gutterBottom>
+                      {card.title}
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      {card.description}
+                    </Typography>
+                  </CardContent>
+                </CardActionArea>
+              </Card>
+            </Grid>
+          ))}
+        </Grid>
       </Box>
-
-      <Grid container spacing={4}>
-        {navigationCards.map((card) => (
-          <Grid
-            key={card.title}
-            item
-            xs={12} sm={6} md={3}
-          >
-            <Card>
-              <CardActionArea onClick={() => handleCardClick(card.path)}>
-                <CardMedia
-                  component="img"
-                  height="140"
-                  image={card.image}
-                  alt={card.title}
-                />
-                <CardContent>
-                  <Typography variant="h6" component="h2" gutterBottom>
-                    {card.title}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    {card.description}
-                  </Typography>
-                </CardContent>
-              </CardActionArea>
-            </Card>
-          </Grid>
-        ))}
-      </Grid>
     </Box>
   );
 }
