@@ -1,11 +1,16 @@
 {
-  "name": "new-duty-station-database",
+  "name": "un-duty-station-database",
   "private": true,
   "version": "0.0.0",
   "type": "module",
+  "engines": {
+    "node": ">=20.0.0",
+    "npm": ">=10.0.0"
+  },
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build",
+    "build": "tsc -p tsconfig.production.json --noEmit && vite build",
+    "build:force": "vite build",
     "lint": "eslint .",
     "preview": "vite preview"
   },
