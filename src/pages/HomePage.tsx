@@ -48,20 +48,21 @@ function HomePage() {
           UN Duty Station Database Manager
         </Typography>
         
-        <Grid container spacing={4}>
+        <Grid container spacing={4} justifyContent="center">
           {navigationCards.map((card) => (
             <Grid
               key={card.title}
               item
               xs={12} sm={6} md={3}
             >
-              <Card>
+              <Card sx={{ maxWidth: 240 }}>
                 <CardActionArea component={Link} to={card.path}>
                   <CardMedia
                     component="img"
                     height="140"
                     image={card.image}
                     alt={card.title}
+                    sx={{ objectFit: 'contain' }}
                   />
                   <CardContent>
                     <Typography variant="h6" component="h2" gutterBottom>
