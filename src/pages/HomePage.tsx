@@ -42,10 +42,9 @@ function HomePage() {
   // EXACT replication of CEB Donor Codes HomePage structure
   return (
     <Box>
-      <Toolbar />
       <Box sx={{ textAlign: 'center' }}>
-        <Typography variant="h3" component="h1" gutterBottom>
-          UN Duty Station Database Manager
+        <Typography variant="h3" component="h1" gutterBottom sx={{ marginBottom: '48px' }}>
+          UN Duty Station Codes
         </Typography>
         
         <Grid container spacing={4} justifyContent="center">
