@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { theme } from './theme/theme';
 import { ThemeProvider } from './context/ThemeContext';
 import { useThemeMode } from './context/ThemeContext';
+import { DataProvider } from './context/DataContext';
 import Layout from './components/layout/Layout';
 import HomePage from './pages/HomePage';
 import SearchPage from './pages/SearchPage';
@@ -100,9 +101,11 @@ function AppContent() {
 function App() {
   return (
     <ThemeProvider>
-      <MuiThemeProvider theme={theme}>
-        <AppContent />
-      </MuiThemeProvider>
+      <DataProvider>
+        <MuiThemeProvider theme={theme}>
+          <AppContent />
+        </MuiThemeProvider>
+      </DataProvider>
     </ThemeProvider>
   );
 }

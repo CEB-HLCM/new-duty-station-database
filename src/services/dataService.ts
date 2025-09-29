@@ -29,13 +29,7 @@ export async function fetchDutyStations(): Promise<DutyStation[]> {
   try {
     console.log('Fetching duty stations from:', DUTY_STATIONS_CSV_URL);
     
-    const response = await fetch(DUTY_STATIONS_CSV_URL, {
-      method: 'GET',
-      headers: { 
-        'Accept': 'text/csv,text/plain,*/*',
-        'Cache-Control': 'no-cache'
-      }
-    });
+    const response = await fetch(DUTY_STATIONS_CSV_URL);
     
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
@@ -69,13 +63,7 @@ export async function fetchCountries(): Promise<Country[]> {
   try {
     console.log('Fetching countries from:', COUNTRIES_CSV_URL);
     
-    const response = await fetch(COUNTRIES_CSV_URL, {
-      method: 'GET',
-      headers: { 
-        'Accept': 'text/csv,text/plain,*/*',
-        'Cache-Control': 'no-cache'
-      }
-    });
+    const response = await fetch(COUNTRIES_CSV_URL);
     
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
