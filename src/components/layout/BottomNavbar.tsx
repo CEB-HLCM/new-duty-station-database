@@ -3,6 +3,7 @@ import {
   BottomNavigationAction,
   Badge,
   Paper,
+  useTheme,
 } from '@mui/material';
 import {
   Home as HomeIcon,
@@ -30,6 +31,7 @@ const navigationItems = [
 function BottomNavbar({ requestCount }: BottomNavbarProps) {
   const navigate = useNavigate();
   const location = useLocation();
+  const theme = useTheme();
 
   const getCurrentValue = () => {
     const currentIndex = navigationItems.findIndex(item => item.path === location.pathname);
@@ -48,7 +50,8 @@ function BottomNavbar({ requestCount }: BottomNavbarProps) {
         left: 0, 
         right: 0,
         zIndex: (theme) => theme.zIndex.appBar,
-        borderTop: '1px solid #e0e0e0'
+        borderTop: `1px solid ${theme.palette.divider}`,
+        backgroundColor: theme.palette.background.paper
       }} 
       elevation={8}
     >
@@ -58,19 +61,19 @@ function BottomNavbar({ requestCount }: BottomNavbarProps) {
         showLabels={false}
         sx={{
           height: 56,
-          backgroundColor: '#fafafa',
+          backgroundColor: theme.palette.background.paper,
           '& .MuiBottomNavigationAction-root': {
             minWidth: 'auto',
             padding: '6px 12px 8px',
             '&.Mui-selected': {
-              color: '#008fd5',
+              color: theme.palette.primary.main,
               '& .MuiBottomNavigationAction-label': {
                 fontSize: '0.75rem',
                 fontWeight: 600
               }
             },
             '&:not(.Mui-selected)': {
-              color: '#757575'
+              color: theme.palette.text.secondary
             }
           }
         }}

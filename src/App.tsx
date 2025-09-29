@@ -1,6 +1,8 @@
-import { ThemeProvider, CssBaseline, GlobalStyles } from '@mui/material';
+import { ThemeProvider as MuiThemeProvider, CssBaseline, GlobalStyles, useColorScheme } from '@mui/material';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { theme } from './theme/theme';
+import { ThemeProvider } from './context/ThemeContext';
+import { useThemeMode } from './context/ThemeContext';
 import Layout from './components/layout/Layout';
 import HomePage from './pages/HomePage';
 import SearchPage from './pages/SearchPage';
@@ -55,14 +57,26 @@ const globalStyles = {
   },
 };
 
-function App() {
+function ColorSchemeSync() {
+  const { colorMode } = useThemeMode();
+  const { setMode } = useColorScheme();
+
+  useEffect(() => {
+    setMode(colorMode);
+  }, [colorMode, setMode]);
+
+  return null;
+}
+
+function AppContent() {
   // Remove loading class once React has loaded
   useEffect(() => {
     document.body.classList.add('app-loaded');
   }, []);
 
   return (
-    <ThemeProvider theme={theme}>
+    <>
+      <ColorSchemeSync />
       <CssBaseline enableColorScheme />
       <GlobalStyles styles={globalStyles} />
       <Router>
@@ -79,6 +93,16 @@ function App() {
           </Routes>
         </Layout>
       </Router>
+    </>
+  );
+}
+
+function App() {
+  return (
+    <ThemeProvider>
+      <MuiThemeProvider theme={theme}>
+        <AppContent />
+      </MuiThemeProvider>
     </ThemeProvider>
   );
 }

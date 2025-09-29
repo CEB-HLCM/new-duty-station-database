@@ -4,15 +4,13 @@ import {
   IconButton,
   Badge,
   Box,
-  Typography,
 } from '@mui/material';
 import {
   Menu as MenuIcon,
   List as ListIcon,
-  Brightness4 as DarkModeIcon,
-  Brightness7 as LightModeIcon,
 } from '@mui/icons-material';
 import { Link } from 'react-router-dom';
+import ThemeToggle from './ThemeToggle';
 
 interface HeaderProps {
   onMenuClick: () => void;
@@ -20,8 +18,6 @@ interface HeaderProps {
 }
 
 function Header({ onMenuClick, requestCount }: HeaderProps) {
-  const isDarkMode = false;
-
   return (
     <AppBar 
       position="fixed" 
@@ -73,17 +69,7 @@ function Header({ onMenuClick, requestCount }: HeaderProps) {
         </Box>
         
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          <IconButton 
-            color="inherit" 
-            aria-label="toggle dark mode"
-            sx={{
-              '&:hover': {
-                backgroundColor: 'rgba(255, 255, 255, 0.1)'
-              }
-            }}
-          >
-            {isDarkMode ? <LightModeIcon /> : <DarkModeIcon />}
-          </IconButton>
+          <ThemeToggle color="inherit" />
           
           <Link 
             to="/requests-list"

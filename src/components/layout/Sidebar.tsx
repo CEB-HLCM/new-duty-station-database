@@ -9,6 +9,7 @@ import {
   Box,
   IconButton,
   Typography,
+  useTheme,
 } from '@mui/material';
 import {
   ChevronLeft as ChevronLeftIcon,
@@ -41,6 +42,7 @@ const menuItems = [
 
 function Sidebar({ open, onClose }: SidebarProps) {
   const location = useLocation();
+  const theme = useTheme();
 
   return (
     <Drawer
@@ -52,8 +54,8 @@ function Sidebar({ open, onClose }: SidebarProps) {
         '& .MuiDrawer-paper': {
           width: 280,
           boxSizing: 'border-box',
-          backgroundColor: '#fafafa',
-          borderRight: '1px solid #e0e0e0',
+          backgroundColor: theme.palette.background.default,
+          borderRight: `1px solid ${theme.palette.divider}`,
         },
       }}
     >
@@ -64,8 +66,8 @@ function Sidebar({ open, onClose }: SidebarProps) {
         justifyContent: 'space-between',
         minHeight: 64,
         px: 2,
-        backgroundColor: '#008fd5',
-        color: 'white'
+        backgroundColor: theme.palette.primary.main,
+        color: theme.palette.primary.contrastText
       }}>
         <Typography variant="h6" sx={{ fontWeight: 600, fontSize: '1rem' }}>
           Navigation
@@ -73,7 +75,7 @@ function Sidebar({ open, onClose }: SidebarProps) {
         <IconButton 
           onClick={onClose}
           sx={{ 
-            color: 'white',
+            color: theme.palette.primary.contrastText,
             '&:hover': {
               backgroundColor: 'rgba(255, 255, 255, 0.1)'
             }
@@ -101,21 +103,21 @@ function Sidebar({ open, onClose }: SidebarProps) {
                   mx: 1,
                   borderRadius: 1,
                   '&.Mui-selected': {
-                    backgroundColor: '#e3f2fd',
-                    borderLeft: '4px solid #008fd5',
+                    backgroundColor: theme.palette.action.selected,
+                    borderLeft: `4px solid ${theme.palette.primary.main}`,
                     '&:hover': {
-                      backgroundColor: '#e3f2fd',
+                      backgroundColor: theme.palette.action.selected,
                     },
                     '& .MuiListItemIcon-root': {
-                      color: '#008fd5',
+                      color: theme.palette.primary.main,
                     },
                     '& .MuiListItemText-primary': {
-                      color: '#008fd5',
+                      color: theme.palette.primary.main,
                       fontWeight: 600,
                     }
                   },
                   '&:hover': {
-                    backgroundColor: '#f5f5f5',
+                    backgroundColor: theme.palette.action.hover,
                   }
                 }}
               >
