@@ -32,8 +32,6 @@ const globalStyles = {
     fontSize: '0.875rem',
     lineHeight: 1.43,
     letterSpacing: '0.01071em',
-    backgroundColor: '#fafafa',
-    color: '#111',
     height: '100%',
   },
   '#root': {

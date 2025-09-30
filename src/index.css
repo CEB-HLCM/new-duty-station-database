@@ -39,8 +39,6 @@ body {
   font-size: 0.875rem;
   line-height: 1.43;
   letter-spacing: 0.01071em;
-  background-color: var(--ceb-background);
-  color: var(--ceb-text-primary);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
