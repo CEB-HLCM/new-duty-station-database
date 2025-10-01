@@ -25,11 +25,17 @@ import {
   Card,
   CardContent,
   IconButton,
-  Tooltip
+  Tooltip,
+  Checkbox,
+  Button,
+  Drawer,
+  Divider
 } from '@mui/material';
-import { Search as SearchIcon, Refresh as RefreshIcon, GetApp as ExportIcon } from '@mui/icons-material';
+import { Search as SearchIcon, Refresh as RefreshIcon, GetApp as ExportIcon, Info as InfoIcon } from '@mui/icons-material';
 import { useAppData } from '../hooks/useAppData';
 import type { DutyStation } from '../types';
+import SelectionToolbar from '../components/table/SelectionToolbar';
+import { exportDutyStationsToCSV, exportDutyStationsToExcel } from '../utils/exportUtils';
 
 function DutyStationsPage() {
   const {
@@ -54,6 +60,8 @@ function DutyStationsPage() {
   const [rowsPerPage, setRowsPerPage] = useState(20);
   const [sortBy, setSortBy] = useState<keyof DutyStation>('NAME');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
+  const [selectedKeys, setSelectedKeys] = useState<Set<string>>(new Set());
+  const [detailStation, setDetailStation] = useState<DutyStation | null>(null);
 
   // Get filtered and paginated data
   const filteredDutyStations = useMemo(() => {
@@ -100,35 +108,35 @@ function DutyStationsPage() {
     refreshData();
   };
 
-  // Export functionality (basic CSV export)
-  const handleExport = () => {
-    const csvContent = [
-      // Header
-      ['DS', 'CTY', 'NAME', 'COUNTRY', 'LATITUDE', 'LONGITUDE', 'COMMONNAME', 'OBSOLETE'].join(','),
-      // Data rows
-      ...filteredDutyStations.map(station =>
-        [
-          station.DS,
-          station.CTY,
-          `"${station.NAME}"`,
-          `"${station.COUNTRY || ''}"`,
-          station.LATITUDE,
-          station.LONGITUDE,
-          `"${station.COMMONNAME}"`,
-          station.OBSOLETE
-        ].join(',')
-      )
-    ].join('\n');
+  // Export handlers
+  const handleExportCSVAll = () => exportDutyStationsToCSV(filteredDutyStations, 'duty-stations');
+  const handleExportExcelAll = () => exportDutyStationsToExcel(filteredDutyStations, 'duty-stations');
+  const handleExportCSVSelected = (rows: DutyStation[]) => exportDutyStationsToCSV(rows, 'duty-stations-selected');
+  const handleExportExcelSelected = (rows: DutyStation[]) => exportDutyStationsToExcel(rows, 'duty-stations-selected');
 
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    const url = URL.createObjectURL(blob);
-    link.setAttribute('href', url);
-    link.setAttribute('download', `duty-stations-${new Date().toISOString().split('T')[0]}.csv`);
-    link.style.visibility = 'hidden';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+  // Selection helpers
+  const getKey = (s: DutyStation, index?: number) => `${s.DS}-${s.CTY}${index !== undefined ? '-' + index : ''}`;
+  const isSelected = (key: string) => selectedKeys.has(key);
+  const clearSelection = () => setSelectedKeys(new Set());
+  const toggleRow = (key: string) => {
+    setSelectedKeys(prev => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key); else next.add(key);
+      return next;
+    });
+  };
+  const toggleAll = () => {
+    const allKeys = paginatedResults.data.map((s, idx) => getKey(s, idx));
+    const allSelected = allKeys.every(k => selectedKeys.has(k));
+    setSelectedKeys(prev => {
+      const next = new Set(prev);
+      if (allSelected) {
+        allKeys.forEach(k => next.delete(k));
+      } else {
+        allKeys.forEach(k => next.add(k));
+      }
+      return next;
+    });
   };
 
   // Loading state
@@ -231,7 +239,7 @@ function DutyStationsPage() {
       </Grid>
 
       {/* Filters */}
-      <Paper sx={{ p: 3, mb: 3 }}>
+      <Paper sx={{ p: 3, mb: 1 }}>
         <Grid container spacing={3} alignItems="center">
           <Grid size={{ xs: 12, md: 4 }}>
             <TextField
@@ -292,15 +300,31 @@ function DutyStationsPage() {
                   <RefreshIcon />
                 </IconButton>
               </Tooltip>
-              <Tooltip title="Export CSV">
-                <IconButton onClick={handleExport}>
-                  <ExportIcon />
-                </IconButton>
+              <Tooltip title="Export filtered results">
+                <span>
+                  <IconButton onClick={handleExportCSVAll} disabled={filteredDutyStations.length === 0}>
+                    <ExportIcon />
+                  </IconButton>
+                </span>
               </Tooltip>
+              <Button size="small" variant="outlined" onClick={handleExportExcelAll} disabled={filteredDutyStations.length === 0}>Excel</Button>
             </Box>
           </Grid>
         </Grid>
       </Paper>
+
+      {/* Selection Toolbar */}
+      <SelectionToolbar
+        selected={Array.from(selectedKeys).map(k => {
+          // Map keys back to rows from current filtered list for export purposes
+          // Use a quick lookup over current page + filtered set
+          const found = paginatedResults.data.find((s, idx) => getKey(s, idx) === k);
+          return found as DutyStation;
+        }).filter(Boolean)}
+        onClearSelection={clearSelection}
+        onExportCSV={handleExportCSVSelected}
+        onExportExcel={handleExportExcelSelected}
+      />
 
       {/* Error Alert */}
       {error && (
@@ -316,6 +340,14 @@ function DutyStationsPage() {
           <Table stickyHeader>
             <TableHead>
               <TableRow>
+                <TableCell padding="checkbox">
+                  <Checkbox
+                    indeterminate={selectedKeys.size > 0 && selectedKeys.size < paginatedResults.data.length}
+                    checked={paginatedResults.data.length > 0 && selectedKeys.size === paginatedResults.data.length}
+                    onChange={toggleAll}
+                    inputProps={{ 'aria-label': 'select all on page' }}
+                  />
+                </TableCell>
                 <TableCell 
                   sortDirection={sortBy === 'DS' ? sortOrder : false}
                   sx={{ cursor: 'pointer' }}
@@ -347,6 +379,7 @@ function DutyStationsPage() {
                 <TableCell align="right">Latitude</TableCell>
                 <TableCell align="right">Longitude</TableCell>
                 <TableCell align="center">Status</TableCell>
+                <TableCell align="center">Details</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
@@ -366,8 +399,18 @@ function DutyStationsPage() {
                   </TableCell>
                 </TableRow>
               )}
-              {!loading && paginatedResults.data.map((station, index) => (
-                <TableRow key={`${station.DS}-${station.CTY}-${index}`} hover>
+              {!loading && paginatedResults.data.map((station, index) => {
+                const key = `${station.DS}-${station.CTY}-${index}`;
+                const selected = isSelected(key);
+                return (
+                <TableRow key={key} hover selected={selected}>
+                  <TableCell padding="checkbox">
+                    <Checkbox
+                      checked={selected}
+                      onChange={() => toggleRow(key)}
+                      inputProps={{ 'aria-label': `select ${station.DS}` }}
+                    />
+                  </TableCell>
                   <TableCell>
                     <Typography variant="body2" fontWeight="medium">
                       {station.DS}
@@ -406,8 +449,15 @@ function DutyStationsPage() {
                       variant={station.OBSOLETE === '1' ? 'outlined' : 'filled'}
                     />
                   </TableCell>
+                  <TableCell align="center">
+                    <Tooltip title="View details">
+                      <IconButton size="small" onClick={() => setDetailStation(station)}>
+                        <InfoIcon />
+                      </IconButton>
+                    </Tooltip>
+                  </TableCell>
                 </TableRow>
-              ))}
+              );})}
             </TableBody>
           </Table>
         </TableContainer>
@@ -423,6 +473,23 @@ function DutyStationsPage() {
           onRowsPerPageChange={handleChangeRowsPerPage}
         />
       </Paper>
+      <Drawer anchor="right" open={!!detailStation} onClose={() => setDetailStation(null)} sx={{ '& .MuiDrawer-paper': { width: 360 } }}>
+        <Box sx={{ p: 2 }}>
+          <Typography variant="h6">Duty Station Details</Typography>
+        </Box>
+        <Divider />
+        {detailStation && (
+          <Box sx={{ p: 2 }}>
+            <Typography variant="body2"><strong>Code:</strong> {detailStation.DS}</Typography>
+            <Typography variant="body2"><strong>Name:</strong> {detailStation.NAME}</Typography>
+            <Typography variant="body2"><strong>Country:</strong> {detailStation.COUNTRY || 'N/A'}</Typography>
+            <Typography variant="body2"><strong>Common Name:</strong> {detailStation.COMMONNAME || '-'}</Typography>
+            <Typography variant="body2"><strong>Latitude:</strong> {detailStation.LATITUDE}</Typography>
+            <Typography variant="body2"><strong>Longitude:</strong> {detailStation.LONGITUDE}</Typography>
+            <Typography variant="body2"><strong>Status:</strong> {detailStation.OBSOLETE === '1' ? 'Obsolete' : 'Active'}</Typography>
+          </Box>
+        )}
+      </Drawer>
     </Container>
   );
 }

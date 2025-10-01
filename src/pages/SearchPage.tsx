@@ -24,6 +24,7 @@ import { useSearch } from '../hooks/useSearch';
 import SearchFilters from '../components/search/SearchFilters';
 import SearchResults from '../components/search/SearchResults';
 import SearchSuggestions from '../components/search/SearchSuggestions';
+import { exportDutyStationsToCSV, exportDutyStationsToExcel } from '../utils/exportUtils';
 import type { DutyStation } from '../types';
 
 function SearchPage() {
@@ -82,10 +83,16 @@ function SearchPage() {
     // Future: Open station detail modal or navigate to detail page
   };
 
-  // Handle export results (placeholder for future implementation)
+  // Handle export results
   const handleExportResults = () => {
-    console.log('Export results');
-    // Future: Export search results to CSV
+    if (searchHook.results.length === 0) return;
+    
+    // Extract duty stations from search results
+    const dutyStations = searchHook.results.map(result => result.item);
+    
+    // Export to CSV with search query in filename
+    const filename = `search-results-${query.replace(/[^a-zA-Z0-9]/g, '-') || 'all'}`;
+    exportDutyStationsToCSV(dutyStations, filename);
   };
 
   // Toggle advanced filters
