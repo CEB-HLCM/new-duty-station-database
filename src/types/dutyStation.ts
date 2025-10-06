@@ -9,6 +9,8 @@ export interface DutyStation {
   COMMONNAME: string;   // Common/Alternative name
   OBSOLETE: string;     // Obsolete flag ("0" or "1")
   COUNTRY?: string;     // Country name (joined from countries data)
+  REGION?: string;      // Geographic region (Africa, Asia, Europe, Americas, Oceania)
+  CLASS?: string;       // Station classification (A, B, C, D, E, H)
 }
 
 export interface Country {

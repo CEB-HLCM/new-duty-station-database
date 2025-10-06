@@ -46,7 +46,9 @@ export async function fetchDutyStations(): Promise<DutyStation[]> {
       LATITUDE: parseFloat(row.LATITUDE?.replace(',', '.') || '0'),
       LONGITUDE: parseFloat(row.LONGITUDE?.replace(',', '.') || '0'),
       COMMONNAME: row.COMMONNAME || '',
-      OBSOLETE: row.OBSOLETE || '0'
+      OBSOLETE: row.OBSOLETE || '0',
+      REGION: row.REGION || '',
+      CLASS: row.CLASS || ''
     }));
     
     // Return ALL stations including obsolete ones

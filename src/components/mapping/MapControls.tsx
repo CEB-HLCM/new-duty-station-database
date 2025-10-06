@@ -1,6 +1,6 @@
 // Map controls component for layer switching and filtering
-import { Box, Paper, ToggleButtonGroup, ToggleButton, FormControlLabel, Switch, Stack, Typography } from '@mui/material';
-import { Layers as LayersIcon, Satellite as SatelliteIcon, Terrain as TerrainIcon, Map as MapIcon } from '@mui/icons-material';
+import { Box, Paper, ToggleButtonGroup, ToggleButton, FormControlLabel, Switch, Stack, Typography, Select, MenuItem, FormControl, InputLabel } from '@mui/material';
+import { Layers as LayersIcon, Satellite as SatelliteIcon, Terrain as TerrainIcon, Map as MapIcon, Public as PublicIcon } from '@mui/icons-material';
 
 export type TileLayer = 'osm' | 'satellite' | 'terrain';
 
@@ -11,6 +11,8 @@ interface MapControlsProps {
   onShowObsoleteChange: (show: boolean) => void;
   showClustering: boolean;
   onShowClusteringChange: (show: boolean) => void;
+  regionFilter?: string;
+  onRegionFilterChange?: (region: string) => void;
   stationCount?: number;
   visibleCount?: number;
 }
@@ -22,6 +24,8 @@ export const MapControls = ({
   onShowObsoleteChange,
   showClustering,
   onShowClusteringChange,
+  regionFilter = 'all',
+  onRegionFilterChange,
   stationCount,
   visibleCount
 }: MapControlsProps) => {
@@ -65,6 +69,29 @@ export const MapControls = ({
               Terrain
             </ToggleButton>
           </ToggleButtonGroup>
+        </Box>
+
+        <Box>
+          <Typography variant="subtitle2" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <PublicIcon fontSize="small" />
+            Region Filter
+          </Typography>
+          <FormControl size="small" fullWidth sx={{ mt: 1 }}>
+            <InputLabel id="region-filter-label">Select Region</InputLabel>
+            <Select
+              labelId="region-filter-label"
+              value={regionFilter}
+              label="Select Region"
+              onChange={(e) => onRegionFilterChange && onRegionFilterChange(e.target.value)}
+            >
+              <MenuItem value="all">All Regions</MenuItem>
+              <MenuItem value="Africa">Africa</MenuItem>
+              <MenuItem value="Americas">Americas</MenuItem>
+              <MenuItem value="Asia">Asia</MenuItem>
+              <MenuItem value="Europe">Europe</MenuItem>
+              <MenuItem value="Oceania">Oceania</MenuItem>
+            </Select>
+          </FormControl>
         </Box>
 
         <Box>

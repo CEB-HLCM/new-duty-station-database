@@ -32,6 +32,7 @@ function MapsPage() {
   const [selectedLayer, setSelectedLayer] = useState<TileLayer>('osm');
   const [showObsolete, setShowObsolete] = useState(false);
   const [showClustering, setShowClustering] = useState(true);
+  const [regionFilter, setRegionFilter] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedStation, setSelectedStation] = useState<DutyStation | null>(null);
   const [mapCenter, setMapCenter] = useState<MapCoordinates>({ latitude: 20, longitude: 0 });
@@ -45,25 +46,65 @@ function MapsPage() {
     error: locationError
   } = useGeolocation();
 
-  // Filter stations based on obsolete toggle
+  // Filter stations based on obsolete toggle and region
   const filteredStations = useMemo(() => {
-    return dutyStations.filter(station => 
-      showObsolete || station.OBSOLETE === '0'
-    );
-  }, [dutyStations, showObsolete]);
+    return dutyStations.filter(station => {
+      // Filter by obsolete
+      const obsoleteMatch = showObsolete || station.OBSOLETE === '0';
+      
+      // Filter by region
+      const regionMatch = regionFilter === 'all' || station.REGION === regionFilter;
+      
+      return obsoleteMatch && regionMatch;
+    });
+  }, [dutyStations, showObsolete, regionFilter]);
 
-  // Search functionality for autocomplete
+  // Search functionality for autocomplete with relevance sorting
   const searchResults = useMemo(() => {
     if (!searchQuery) return [];
     
     const query = searchQuery.toLowerCase();
-    return dutyStations
-      .filter(station => 
-        station.NAME.toLowerCase().includes(query) ||
-        station.COUNTRY?.toLowerCase().includes(query) ||
-        station.DS.toLowerCase().includes(query) ||
-        station.COMMONNAME.toLowerCase().includes(query)
-      )
+    
+    // Filter stations matching the query
+    const matchedStations = dutyStations.filter(station => 
+      station.NAME.toLowerCase().includes(query) ||
+      station.COUNTRY?.toLowerCase().includes(query) ||
+      station.DS.toLowerCase().includes(query) ||
+      station.COMMONNAME.toLowerCase().includes(query)
+    );
+    
+    // Sort by relevance:
+    // 1. Exact NAME match first
+    // 2. NAME starts with query
+    // 3. COUNTRY exact match
+    // 4. COUNTRY starts with query
+    // 5. Everything else alphabetically
+    return matchedStations
+      .sort((a, b) => {
+        const aName = a.NAME.toLowerCase();
+        const bName = b.NAME.toLowerCase();
+        const aCountry = (a.COUNTRY || '').toLowerCase();
+        const bCountry = (b.COUNTRY || '').toLowerCase();
+        
+        // Exact NAME matches first
+        if (aName === query && bName !== query) return -1;
+        if (bName === query && aName !== query) return 1;
+        
+        // NAME starts with query
+        if (aName.startsWith(query) && !bName.startsWith(query)) return -1;
+        if (bName.startsWith(query) && !aName.startsWith(query)) return 1;
+        
+        // Exact COUNTRY match
+        if (aCountry === query && bCountry !== query) return -1;
+        if (bCountry === query && aCountry !== query) return 1;
+        
+        // COUNTRY starts with query
+        if (aCountry.startsWith(query) && !bCountry.startsWith(query)) return -1;
+        if (bCountry.startsWith(query) && !aCountry.startsWith(query)) return 1;
+        
+        // Alphabetical by NAME
+        return aName.localeCompare(bName);
+      })
       .slice(0, 50); // Limit results for performance
   }, [dutyStations, searchQuery]);
 
@@ -121,7 +162,7 @@ function MapsPage() {
       <Box sx={{ p: 3, height: '100%', display: 'flex', flexDirection: 'column' }}>
         {/* Header */}
         <Box sx={{ mb: 2 }}>
-          <Typography variant="h4" component="h1" gutterBottom>
+        <Typography variant="h4" component="h1" gutterBottom>
             Interactive Map
           </Typography>
           <Typography variant="body2" color="text.secondary">
@@ -150,12 +191,18 @@ function MapsPage() {
             <Autocomplete
               sx={{ flex: 1, minWidth: 300 }}
               options={searchResults}
+              filterOptions={(options) => options} // Bypass MUI's built-in filtering
               getOptionLabel={(option) => 
                 `${option.NAME} - ${option.COUNTRY || option.CTY} (${option.DS})`
               }
               value={selectedStation}
               onChange={(_, value) => handleStationSelect(value)}
-              onInputChange={(_, value) => setSearchQuery(value)}
+              inputValue={searchQuery}
+              onInputChange={(_, value, reason) => {
+                if (reason !== 'reset') {
+                  setSearchQuery(value);
+                }
+              }}
               loading={loading}
               renderInput={(params) => (
                 <TextField
@@ -179,7 +226,7 @@ function MapsPage() {
                 />
               )}
               renderOption={(props, option) => (
-                <li {...props} key={option.DS}>
+                <li {...props} key={`${option.DS}-${option.CTY}`}>
                   <Stack>
                     <Typography variant="body2">
                       {option.NAME}
@@ -311,6 +358,8 @@ function MapsPage() {
                 onShowObsoleteChange={setShowObsolete}
                 showClustering={showClustering}
                 onShowClusteringChange={setShowClustering}
+                regionFilter={regionFilter}
+                onRegionFilterChange={setRegionFilter}
                 stationCount={dutyStations.length}
                 visibleCount={filteredStations.length}
               />
@@ -329,10 +378,10 @@ function MapsPage() {
                 <Typography variant="body2" color="text.secondary">
                   {selectedStation.COUNTRY || selectedStation.CTY} • Code: {selectedStation.DS}
                   {selectedStation.OBSOLETE === '1' && ' • Status: Obsolete'}
-                </Typography>
+        </Typography>
                 <Typography variant="caption" color="text.secondary" fontFamily="monospace">
                   {selectedStation.LATITUDE.toFixed(6)}, {selectedStation.LONGITUDE.toFixed(6)}
-                </Typography>
+        </Typography>
               </Box>
               <Button
                 variant="outlined"
