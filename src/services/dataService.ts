@@ -49,8 +49,9 @@ export async function fetchDutyStations(): Promise<DutyStation[]> {
       OBSOLETE: row.OBSOLETE || '0'
     }));
     
-    // Filter out obsolete stations by default
-    return dutyStations.filter(station => station.OBSOLETE !== '1');
+    // Return ALL stations including obsolete ones
+    // UI components will handle filtering based on user preferences
+    return dutyStations;
     
   } catch (error) {
     console.error('Failed to fetch duty stations:', error);
