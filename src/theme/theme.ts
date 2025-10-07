@@ -1,4 +1,4 @@
-import { createTheme } from '@mui/material/styles';
+import { createTheme, type Theme } from '@mui/material/styles';
 
 // Color palette extracted from CEB Donor Codes app (EXACT MATCH)
 export const cebColors = {
@@ -18,7 +18,7 @@ export const cebColors = {
 } as const;
 
 const themeOptions = {
-  defaultColorScheme: 'light',
+  defaultColorScheme: 'light' as const,
   colorSchemes: {
     light: {
       palette: {
@@ -120,7 +120,7 @@ const themeOptions = {
     // AppBar styling with dark mode support
     MuiAppBar: {
       styleOverrides: {
-        root: ({ theme }) => ({
+        root: ({ theme }: { theme: Theme }) => ({
           ...theme.applyStyles('light', {
             backgroundColor: cebColors.primary,
             color: cebColors.white,
@@ -139,7 +139,7 @@ const themeOptions = {
           textTransform: 'none' as const,
           borderRadius: 4,
         },
-        contained: ({ theme }) => ({
+        contained: ({ theme }: { theme: Theme }) => ({
           ...theme.applyStyles('light', {
             '&:hover': {
               backgroundColor: cebColors.buttonHover,
@@ -151,7 +151,7 @@ const themeOptions = {
             },
           }),
         }),
-        outlined: ({ theme }) => ({
+        outlined: ({ theme }: { theme: Theme }) => ({
           ...theme.applyStyles('light', {
             borderColor: cebColors.buttonHover,
             color: cebColors.buttonHover,
@@ -174,7 +174,7 @@ const themeOptions = {
     // Table styling with dark mode support
     MuiTableHead: {
       styleOverrides: {
-        root: ({ theme }) => ({
+        root: ({ theme }: { theme: Theme }) => ({
           '& .MuiTableCell-head': {
             fontWeight: 600,
             ...theme.applyStyles('light', {
@@ -193,7 +193,7 @@ const themeOptions = {
     },
     MuiTableBody: {
       styleOverrides: {
-        root: ({ theme }) => ({
+        root: ({ theme }: { theme: Theme }) => ({
           ...theme.applyStyles('light', {
             '& .MuiTableRow-root:nth-of-type(odd)': {
               backgroundColor: cebColors.tableAlt,
@@ -217,7 +217,7 @@ const themeOptions = {
     },
     MuiTable: {
       styleOverrides: {
-        root: ({ theme }) => ({
+        root: ({ theme }: { theme: Theme }) => ({
           borderCollapse: 'collapse' as const,
           ...theme.applyStyles('light', {
             border: `3px solid ${cebColors.tableBorder}`,
@@ -231,7 +231,7 @@ const themeOptions = {
     // Pagination styling with dark mode support
     MuiPaginationItem: {
       styleOverrides: {
-        root: ({ theme }) => ({
+        root: ({ theme }: { theme: Theme }) => ({
           fontSize: '1rem',
           ...theme.applyStyles('light', {
             '&.Mui-selected': {

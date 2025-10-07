@@ -44,8 +44,10 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.36.0",
+    "@types/node": "^20.19.11",
     "@types/react": "^19.1.13",
     "@types/react-dom": "^19.1.9",
+    "@types/soundex": "^0.2.3",
     "@vitejs/plugin-react": "^5.0.3",
     "eslint": "^9.36.0",
     "eslint-plugin-react-hooks": "^5.2.0",

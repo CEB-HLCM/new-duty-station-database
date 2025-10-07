@@ -18,7 +18,7 @@ import shadowUrl from 'leaflet/dist/images/marker-shadow.png';
 
 L.Icon.Default.prototype.options.iconUrl = iconUrl;
 L.Icon.Default.prototype.options.iconRetinaUrl = iconRetinaUrl;
-L.Icon.Default.prototype.options.iconShadow = shadowUrl;
+L.Icon.Default.prototype.options.shadowUrl = shadowUrl;
 
 // Tile layer URLs
 const TILE_LAYERS = {

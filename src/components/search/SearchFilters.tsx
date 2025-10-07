@@ -76,7 +76,7 @@ function SearchFilters({
     <Box sx={{ mb: 3 }}>
       {/* Basic Filters */}
       <Grid container spacing={2} sx={{ mb: 2 }}>
-        <Grid item xs={12} sm={6} md={4}>
+        <Grid xs={12} sm={6} md={4}>
           <FormControl fullWidth size="small">
             <InputLabel>Search Type</InputLabel>
             <Select
@@ -93,7 +93,7 @@ function SearchFilters({
           </FormControl>
         </Grid>
 
-        <Grid item xs={12} sm={6} md={4}>
+        <Grid xs={12} sm={6} md={4}>
           <FormControl fullWidth size="small">
             <InputLabel>Country</InputLabel>
             <Select
@@ -110,7 +110,7 @@ function SearchFilters({
           </FormControl>
         </Grid>
 
-        <Grid item xs={12} sm={6} md={4}>
+        <Grid xs={12} sm={6} md={4}>
           <Box sx={{ display: 'flex', alignItems: 'center', height: '40px' }}>
             <FormControlLabel
               control={
@@ -141,7 +141,7 @@ function SearchFilters({
         <AccordionDetails>
           <Grid container spacing={3}>
             {/* Search Fields Selection */}
-            <Grid item xs={12}>
+            <Grid xs={12}>
               <Typography variant="subtitle2" gutterBottom>
                 Search In Fields:
               </Typography>
@@ -163,7 +163,7 @@ function SearchFilters({
             </Grid>
 
             {/* Search Type Descriptions */}
-            <Grid item xs={12}>
+            <Grid xs={12}>
               <Typography variant="subtitle2" gutterBottom>
                 Search Type Information:
               </Typography>
@@ -179,7 +179,7 @@ function SearchFilters({
 
             {/* Performance Metrics (Development) */}
             {process.env.NODE_ENV === 'development' && (
-              <Grid item xs={12}>
+              <Grid xs={12}>
                 <Typography variant="subtitle2" gutterBottom>
                   Performance Metrics:
                 </Typography>

@@ -61,33 +61,32 @@ function exactSearch(
   
   if (!lowerQuery) return [];
   
-  return data
-    .map((item) => {
-      // Check for exact matches in specified fields
-      const exactMatches = fields.filter(field => {
-        const fieldValue = item[field];
-        if (typeof fieldValue === 'string') {
-          return fieldValue.toLowerCase() === lowerQuery;
-        }
-        return false;
-      });
-      
-      if (exactMatches.length > 0) {
-        return {
-          item,
-          score: 0, // Perfect match
-          matches: exactMatches.map(field => ({
-            field: field as string,
-            value: item[field] as string,
-            indices: [[0, (item[field] as string).length - 1]] as [number, number][],
-          })),
-        };
+  const results: SearchResult<DutyStation>[] = [];
+  
+  for (const item of data) {
+    // Check for exact matches in specified fields
+    const exactMatches = fields.filter(field => {
+      const fieldValue = item[field];
+      if (typeof fieldValue === 'string') {
+        return fieldValue.toLowerCase() === lowerQuery;
       }
-      
-      return null;
-    })
-    .filter((result): result is SearchResult<DutyStation> => result !== null)
-    .sort((a, b) => (a.score || 0) - (b.score || 0));
+      return false;
+    });
+    
+    if (exactMatches.length > 0) {
+      results.push({
+        item,
+        score: 0, // Perfect match
+        matches: exactMatches.map(field => ({
+          field: field as string,
+          value: item[field] as string,
+          indices: [[0, (item[field] as string).length - 1]] as [number, number][],
+        })),
+      });
+    }
+  }
+  
+  return results.sort((a, b) => (a.score ?? 0) - (b.score ?? 0));
 }
 
 // Partial search implementation (contains/includes)
@@ -100,43 +99,42 @@ function partialSearch(
   
   if (!lowerQuery) return [];
   
-  return data
-    .map((item) => {
-      const matches: SearchResult<DutyStation>['matches'] = [];
-      let bestScore = 1;
-      
-      fields.forEach(field => {
-        const fieldValue = item[field];
-        if (typeof fieldValue === 'string') {
-          const lowerFieldValue = fieldValue.toLowerCase();
-          const index = lowerFieldValue.indexOf(lowerQuery);
+  const results: SearchResult<DutyStation>[] = [];
+  
+  for (const item of data) {
+    const matches: SearchResult<DutyStation>['matches'] = [];
+    let bestScore = 1;
+    
+    fields.forEach(field => {
+      const fieldValue = item[field];
+      if (typeof fieldValue === 'string') {
+        const lowerFieldValue = fieldValue.toLowerCase();
+        const index = lowerFieldValue.indexOf(lowerQuery);
+        
+        if (index !== -1) {
+          // Calculate score based on position and length
+          const score = index / lowerFieldValue.length;
+          if (score < bestScore) bestScore = score;
           
-          if (index !== -1) {
-            // Calculate score based on position and length
-            const score = index / lowerFieldValue.length;
-            if (score < bestScore) bestScore = score;
-            
-            matches.push({
-              field: field as string,
-              value: fieldValue,
-              indices: [[index, index + lowerQuery.length - 1]] as [number, number][],
-            });
-          }
+          matches.push({
+            field: field as string,
+            value: fieldValue,
+            indices: [[index, index + lowerQuery.length - 1]] as [number, number][],
+          });
         }
-      });
-      
-      if (matches.length > 0) {
-        return {
-          item,
-          score: bestScore,
-          matches,
-        };
       }
-      
-      return null;
-    })
-    .filter((result): result is SearchResult<DutyStation> => result !== null)
-    .sort((a, b) => (a.score || 0) - (b.score || 0));
+    });
+    
+    if (matches.length > 0) {
+      results.push({
+        item,
+        score: bestScore,
+        matches,
+      });
+    }
+  }
+  
+  return results.sort((a, b) => (a.score ?? 0) - (b.score ?? 0));
 }
 
 // Fuzzy search implementation using Fuse.js
@@ -158,7 +156,7 @@ function fuzzySearch(
       matches: result.matches?.map(match => ({
         field: match.key || '',
         value: match.value || '',
-        indices: match.indices || [],
+        indices: (match.indices || []).map(([start, end]) => [start, end] as [number, number]) as [number, number][],
       })),
     }));
 }
@@ -173,38 +171,38 @@ function soundexSearch(
   
   if (!querySoundex) return [];
   
-  return data
-    .map((item) => {
-      const matches: SearchResult<DutyStation>['matches'] = [];
-      
-      fields.forEach(field => {
-        const fieldValue = item[field];
-        if (typeof fieldValue === 'string') {
-          // Split field value into words and check soundex for each
-          const words = fieldValue.split(/\s+/);
-          words.forEach(word => {
-            if (word.length > 2 && soundex(word) === querySoundex) {
-              matches.push({
-                field: field as string,
-                value: fieldValue,
-                indices: [[0, fieldValue.length - 1]] as [number, number][],
-              });
-            }
-          });
-        }
-      });
-      
-      if (matches.length > 0) {
-        return {
-          item,
-          score: 0.5, // Medium confidence for soundex matches
-          matches,
-        };
+  const results: SearchResult<DutyStation>[] = [];
+  
+  for (const item of data) {
+    const matches: SearchResult<DutyStation>['matches'] = [];
+    
+    fields.forEach(field => {
+      const fieldValue = item[field];
+      if (typeof fieldValue === 'string') {
+        // Split field value into words and check soundex for each
+        const words = fieldValue.split(/\s+/);
+        words.forEach(word => {
+          if (word.length > 2 && soundex(word) === querySoundex) {
+            matches.push({
+              field: field as string,
+              value: fieldValue,
+              indices: [[0, fieldValue.length - 1]] as [number, number][],
+            });
+          }
+        });
       }
-      
-      return null;
-    })
-    .filter((result): result is SearchResult<DutyStation> => result !== null);
+    });
+    
+    if (matches.length > 0) {
+      results.push({
+        item,
+        score: 0.5, // Medium confidence for soundex matches
+        matches,
+      });
+    }
+  }
+  
+  return results;
 }
 
 // Main search function that combines all search types
@@ -240,16 +238,16 @@ export function searchDutyStations(
   let results: SearchResult<DutyStation>[] = [];
   
   switch (searchType) {
-    case SearchType.EXACT:
+    case 'exact':
       results = exactSearch(filteredData, query, searchFields);
       break;
-    case SearchType.PARTIAL:
+    case 'partial':
       results = partialSearch(filteredData, query, searchFields);
       break;
-    case SearchType.FUZZY:
+    case 'fuzzy':
       results = fuzzySearch(filteredData, query, 0.3);
       break;
-    case SearchType.SOUNDEX:
+    case 'soundex':
       results = soundexSearch(filteredData, query, searchFields);
       break;
     default:

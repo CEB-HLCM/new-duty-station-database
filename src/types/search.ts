@@ -1,11 +1,13 @@
 // Search-related types following CEB pattern
 
-export enum SearchType {
-  EXACT = 'exact',
-  PARTIAL = 'partial',
-  FUZZY = 'fuzzy',
-  SOUNDEX = 'soundex'
-}
+export type SearchType = 'exact' | 'partial' | 'fuzzy' | 'soundex';
+
+export const SearchType = {
+  EXACT: 'exact' as const,
+  PARTIAL: 'partial' as const,
+  FUZZY: 'fuzzy' as const,
+  SOUNDEX: 'soundex' as const
+};
 
 export interface SearchOptions {
   searchType: SearchType;
