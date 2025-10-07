@@ -51,7 +51,7 @@ function HomePage() {
           {navigationCards.map((card) => (
             <Grid
               key={card.title}
-              xs={12} sm={6} md={3}
+              size={{ xs: 12, sm: 6, md: 3 }}
             >
               <Card sx={{ maxWidth: 240 }}>
                 <CardActionArea component={Link} to={card.path}>

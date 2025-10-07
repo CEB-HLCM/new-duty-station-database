@@ -41,15 +41,6 @@ const themeOptions = {
           primary: cebColors.textPrimary,
           secondary: cebColors.textSecondary,
         },
-        // Custom action colors matching CEB app
-        action: {
-          view: cebColors.viewAction,
-          viewHover: '#00a043',
-          edit: cebColors.editAction,
-          editHover: '#e86100',
-          delete: cebColors.deleteAction,
-          deleteHover: '#c41e3a',
-        },
       },
     },
     dark: {

@@ -1,13 +1,13 @@
 // Advanced search service with multiple search algorithms
 // Following CEB Donor Codes proven patterns
 
-import Fuse from 'fuse.js';
+import Fuse, { type IFuseOptions } from 'fuse.js';
 import soundex from 'soundex';
 import type { DutyStation } from '../types';
 import { SearchType, type SearchOptions, type SearchResult, type SearchFilters } from '../types/search';
 
 // Fuse.js configuration for fuzzy search
-const fuseOptions: Fuse.IFuseOptions<DutyStation> = {
+const fuseOptions: IFuseOptions<DutyStation> = {
   includeScore: true,
   includeMatches: true,
   threshold: 0.3, // Lower = more strict matching
@@ -231,8 +231,11 @@ export function searchDutyStations(
     return filteredData.map(item => ({ item }));
   }
   
-  // Determine search fields
-  const searchFields = fields.length > 0 ? fields as (keyof DutyStation)[] : ['NAME', 'COMMONNAME', 'COUNTRY'];
+  // Determine search fields - convert string array to proper keys
+  const validFields = ['NAME', 'COMMONNAME', 'COUNTRY', 'DS', 'CTY'] as const;
+  const searchFields = fields.length > 0 
+    ? fields.filter(f => validFields.includes(f as any)) as (keyof DutyStation)[]
+    : ['NAME', 'COMMONNAME', 'COUNTRY'] as (keyof DutyStation)[];
   
   // Perform search based on type
   let results: SearchResult<DutyStation>[] = [];
