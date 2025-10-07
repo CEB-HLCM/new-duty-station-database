@@ -64,15 +64,6 @@ const themeOptions = {
           primary: '#ffffff',
           secondary: 'rgba(255, 255, 255, 0.7)',
         },
-        // Custom action colors for dark mode
-        action: {
-          view: '#4caf50',
-          viewHover: '#388e3c',
-          edit: '#ff9800',
-          editHover: '#f57c00',
-          delete: '#f44336',
-          deleteHover: '#d32f2f',
-        },
       },
     },
   },
