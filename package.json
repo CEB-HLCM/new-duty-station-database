@@ -11,6 +11,7 @@
     "dev": "vite",
     "build": "tsc -p tsconfig.production.json --noEmit && vite build",
     "build:force": "vite build",
+    "postbuild": "node fix-build.js",
     "lint": "eslint .",
     "preview": "vite preview"
   },
