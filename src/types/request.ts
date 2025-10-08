@@ -1,26 +1,65 @@
-// Request basket types following CEB pattern
+// Request-related TypeScript interfaces
+import type { DutyStation } from './dutyStation';
 
-import type { DutyStationRequest } from './dutyStation';
+/**
+ * Request type enumeration
+ */
+export type RequestType = 'add' | 'update' | 'remove' | 'coordinate_update';
 
-export interface RequestBasketItem {
+/**
+ * Request status
+ */
+export type RequestStatus = 'pending' | 'submitted' | 'approved' | 'rejected';
+
+/**
+ * Base request interface
+ */
+export interface BaseRequest {
   id: string;
-  request: DutyStationRequest;
-  isSelected: boolean;
-  addedAt: Date;
+  requestType: RequestType;
+  requestDate: Date;
+  submittedBy: string;
+  organization: string;
+  justification: string;
+  status: RequestStatus;
 }
 
-export interface RequestBasket {
-  items: RequestBasketItem[];
-  totalCount: number;
-  selectedCount: number;
-  lastUpdated: Date;
+/**
+ * Coordinate pair
+ */
+export interface Coordinates {
+  latitude: number;
+  longitude: number;
 }
 
-export type BasketAction = 
-  | { type: 'ADD_REQUEST'; payload: DutyStationRequest }
-  | { type: 'REMOVE_REQUEST'; payload: string }
-  | { type: 'TOGGLE_SELECTION'; payload: string }
-  | { type: 'SELECT_ALL' }
-  | { type: 'DESELECT_ALL' }
-  | { type: 'CLEAR_BASKET' }
-  | { type: 'UPDATE_REQUEST'; payload: { id: string; request: Partial<DutyStationRequest> } };
+/**
+ * Request history entry
+ */
+export interface RequestHistoryEntry {
+  id: string;
+  request: BaseRequest;
+  submittedAt: Date;
+  confirmationId?: string;
+  status: RequestStatus;
+}
+
+/**
+ * Basket statistics
+ */
+export interface BasketStats {
+  totalItems: number;
+  pendingItems: number;
+  addRequests: number;
+  updateRequests: number;
+  removeRequests: number;
+  coordinateUpdateRequests: number;
+}
+
+/**
+ * Form persistence data
+ */
+export interface FormPersistenceData {
+  formData: Record<string, unknown>;
+  lastSaved: Date;
+  formType: RequestType;
+}

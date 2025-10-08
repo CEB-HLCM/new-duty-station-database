@@ -78,7 +78,10 @@ export async function fetchCountries(): Promise<Country[]> {
     // Transform raw CSV data to Country interface
     return rawData.map(row => ({
       CTYCD: row.CTYCD || '',
-      NAME: row.NAME || ''
+      NAME: row.NAME || '',
+      REGION: row.REGION || '',
+      ISO2: row.ISO2 || '',
+      ISO3: row.ISO3 || ''
     }));
     
   } catch (error) {

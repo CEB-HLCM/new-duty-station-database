@@ -16,6 +16,9 @@ export interface DutyStation {
 export interface Country {
   CTYCD: string;        // Country Code
   NAME: string;         // Country Name
+  REGION?: string;      // Geographic region (Africa, Asia, Europe, Americas, Oceania)
+  ISO2?: string;        // ISO 2-letter country code
+  ISO3?: string;        // ISO 3-letter country code
 }
 
 // Search and filter interfaces
