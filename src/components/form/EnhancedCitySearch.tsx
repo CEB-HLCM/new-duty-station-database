@@ -57,12 +57,12 @@ export const EnhancedCitySearch: React.FC<EnhancedCitySearchProps> = ({
       try {
         const results = await searchCitiesNominatim(searchTerm, countryName);
         
-        // Filter by country if specified
-        const filtered = countryFilter
-          ? results.filter(r => r.countryCode === countryFilter)
-          : results;
+        // No additional filtering needed - Nominatim already filters by country name
+        // The countryFilter was causing issues because it uses ISO3 codes ("FRA") 
+        // while Nominatim returns ISO2 codes ("FR")
+        console.log(`City search: Found ${results.length} results for "${searchTerm}" in ${countryName}`);
         
-        setOptions(filtered);
+        setOptions(results);
       } catch (error) {
         console.error('City search error:', error);
         setOptions([]);
@@ -70,7 +70,7 @@ export const EnhancedCitySearch: React.FC<EnhancedCitySearchProps> = ({
         setLoading(false);
       }
     }, 500),
-    [countryFilter, countryName]
+    [countryName]
   );
 
   useEffect(() => {

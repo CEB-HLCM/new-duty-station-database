@@ -45,14 +45,24 @@ export const CountrySelector: React.FC<CountrySelectorProps> = ({
   error = false,
   helperText,
 }) => {
-  const { countries } = useAppData();
+  const { countries, loading } = useAppData();
   const [selectedCountry, setSelectedCountry] = useState<Country | null>(null);
   const [region, setRegion] = useState<string | null>(selectedRegion || null);
 
+  // Debug log
+  console.log('CountrySelector - Total countries:', countries.length);
+  console.log('CountrySelector - Sample country:', countries[0]);
+  console.log('CountrySelector - Selected region:', region);
+
   // Filter countries by region
   const filteredCountries = region
-    ? countries.filter((c: any) => c.REGION === region)
+    ? countries.filter((c: Country) => c.REGION === region)
     : countries;
+
+  console.log('CountrySelector - Filtered countries:', filteredCountries.length);
+  if (region) {
+    console.log('CountrySelector - Sample filtered country:', filteredCountries[0]);
+  }
 
   // Sort countries alphabetically
   const sortedCountries = [...filteredCountries].sort((a, b) =>
@@ -112,6 +122,8 @@ export const CountrySelector: React.FC<CountrySelectorProps> = ({
         onChange={handleCountryChange}
         getOptionLabel={(option) => option.NAME}
         isOptionEqualToValue={(option, value) => option.CTYCD === value.CTYCD}
+        loading={loading}
+        disabled={loading}
         renderInput={(params) => (
           <TextField
             {...params}
@@ -120,13 +132,15 @@ export const CountrySelector: React.FC<CountrySelectorProps> = ({
             error={error}
             helperText={
               helperText ||
-              (region
-                ? `Select a country from ${region}`
-                : 'Select a country or filter by region first')
+              (loading
+                ? 'Loading countries...'
+                : region
+                ? `${filteredCountries.length} countries in ${region}`
+                : `${countries.length} countries available - filter by region for easier selection`)
             }
           />
         )}
-        renderOption={(props, option: any) => (
+        renderOption={(props, option: Country) => (
           <li {...props} key={option.CTYCD}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, width: '100%' }}>
               <PublicIcon fontSize="small" color="action" />
@@ -141,9 +155,11 @@ export const CountrySelector: React.FC<CountrySelectorProps> = ({
           </li>
         )}
         noOptionsText={
-          region
-            ? `No countries found in ${region}`
-            : 'Select a region to narrow down the list'
+          loading
+            ? 'Loading countries...'
+            : region
+            ? `No countries found in ${region} region`
+            : 'No countries found - try selecting a region first'
         }
       />
 

@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useReducer, useEffect, type ReactNode } from 'react';
 import type { DutyStation, Country } from '../types';
-import { fetchDutyStationsWithCountriesCached } from '../services/dataService';
+import { fetchDutyStationsWithCountriesCached, fetchCountries } from '../services/dataService';
 
 // Data state interface
 interface DataState {
@@ -95,23 +95,11 @@ export function DataProvider({ children }: DataProviderProps) {
     try {
       dispatch({ type: 'FETCH_START' });
       
-      // Fetch duty stations with country data
-      const dutyStations = await fetchDutyStationsWithCountriesCached();
-      
-      // Extract unique countries from duty stations data
-      const countriesMap = new Map<string, Country>();
-      dutyStations.forEach(station => {
-        if (station.CTY && station.COUNTRY) {
-          countriesMap.set(station.CTY, {
-            CTYCD: station.CTY,
-            NAME: station.COUNTRY,
-          });
-        }
-      });
-      
-      const countries = Array.from(countriesMap.values()).sort((a, b) => 
-        a.NAME.localeCompare(b.NAME)
-      );
+      // Fetch both duty stations and countries in parallel
+      const [dutyStations, countries] = await Promise.all([
+        fetchDutyStationsWithCountriesCached(),
+        fetchCountries()
+      ]);
 
       dispatch({
         type: 'FETCH_SUCCESS',
@@ -119,6 +107,7 @@ export function DataProvider({ children }: DataProviderProps) {
       });
       
       console.log(`DataContext: Loaded ${dutyStations.length} duty stations and ${countries.length} countries`);
+      console.log(`Sample country data:`, countries.slice(0, 3)); // Debug log
       
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';

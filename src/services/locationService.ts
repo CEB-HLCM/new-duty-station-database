@@ -135,15 +135,26 @@ export const searchCitiesNominatim = async (
 
     const data = await response.json();
 
+    console.log(`Nominatim raw response for "${cityName}, ${countryName}":`, data.length, 'results');
+    if (data.length > 0) {
+      console.log('Sample result:', data[0]);
+    }
+
     if (!Array.isArray(data) || data.length === 0) {
+      console.log('No results from Nominatim API');
       return [];
     }
 
-    return data
+    const filtered = data
       .filter((result: any) => {
-        // Only include cities, towns, villages
-        const validTypes = ['city', 'town', 'village', 'municipality'];
-        return result.type && validTypes.includes(result.type.toLowerCase());
+        // Only include cities, towns, villages, and administrative areas
+        // Note: Some major cities like Paris are classified as 'administrative' in Nominatim
+        const validTypes = ['city', 'town', 'village', 'municipality', 'administrative', 'suburb', 'neighbourhood'];
+        const resultType = result.type?.toLowerCase() || '';
+        const resultClass = result.class?.toLowerCase() || '';
+        
+        // Accept if type is valid OR if it's a place/boundary
+        return validTypes.includes(resultType) || resultClass === 'place' || resultClass === 'boundary';
       })
       .map((result: any) => {
         const displayName = result.display_name || '';
@@ -162,8 +173,48 @@ export const searchCitiesNominatim = async (
           },
           summary: displayName,
           confidence: result.importance > 0.5 ? 'high' : result.importance > 0.3 ? 'medium' : 'low',
+          importance: result.importance || 0, // Keep importance for sorting
         };
       });
+    
+    console.log(`Nominatim filtered results (before deduplication): ${filtered.length} cities/towns`);
+    
+    // Deduplicate by name and coordinate proximity (within ~5km = 0.05 degrees)
+    const deduplicated = filtered.reduce((acc: any[], current: any) => {
+      const isDuplicate = acc.some(item => 
+        item.name === current.name &&
+        Math.abs(item.coordinates.latitude - current.coordinates.latitude) < 0.05 &&
+        Math.abs(item.coordinates.longitude - current.coordinates.longitude) < 0.05
+      );
+      
+      if (!isDuplicate) {
+        acc.push(current);
+      } else {
+        // Keep the one with higher importance
+        const existingIndex = acc.findIndex(item => 
+          item.name === current.name &&
+          Math.abs(item.coordinates.latitude - current.coordinates.latitude) < 0.05 &&
+          Math.abs(item.coordinates.longitude - current.coordinates.longitude) < 0.05
+        );
+        if (existingIndex !== -1 && current.importance > acc[existingIndex].importance) {
+          acc[existingIndex] = current; // Replace with higher importance result
+        }
+      }
+      
+      return acc;
+    }, []);
+    
+    // Sort by confidence (high > medium > low)
+    const sorted = deduplicated.sort((a, b) => {
+      const confidenceOrder = { high: 0, medium: 1, low: 2 };
+      return confidenceOrder[a.confidence] - confidenceOrder[b.confidence];
+    });
+    
+    // Remove temporary importance field before returning
+    const results = sorted.map(({ importance, ...rest }) => rest);
+    
+    console.log(`Nominatim deduplicated results: ${results.length} unique cities/towns`);
+    return results;
   } catch (error) {
     console.error('Error searching cities with Nominatim:', error);
     return [];

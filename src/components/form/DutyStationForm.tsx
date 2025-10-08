@@ -135,6 +135,7 @@ export const DutyStationForm: React.FC<DutyStationFormProps> = ({
     setSelectedCountry(null);
     setSelectedRegion(null);
     setCityValidated(false);
+    setShowMap(false); // Hide map when request type changes
   };
 
   const handleCountrySelect = (country: Country | null) => {
@@ -150,6 +151,7 @@ export const DutyStationForm: React.FC<DutyStationFormProps> = ({
     // Clear city when country changes
     form.setValue('name', '');
     setCityValidated(false);
+    setShowMap(false); // Hide map when country changes
   };
 
   const handleCitySelect = (city: CitySearchResult) => {
@@ -166,6 +168,9 @@ export const DutyStationForm: React.FC<DutyStationFormProps> = ({
     }
     
     setCityValidated(true);
+    
+    // Auto-show map for immediate visual verification
+    setShowMap(true);
   };
 
   const handleFormSubmit = form.handleSubmit((data) => {
@@ -337,10 +342,10 @@ export const DutyStationForm: React.FC<DutyStationFormProps> = ({
                   <Grid size={{ xs: 12 }}>
                     <Alert severity="success" sx={{ mb: 2 }}>
                       <Typography variant="subtitle2" gutterBottom>
-                        📌 <strong>Step 3:</strong> Review Coordinates (Auto-populated)
+                        ✓ <strong>Step 3:</strong> Location Verified
                       </Typography>
                       <Typography variant="caption">
-                        Coordinates were automatically set from the validated city. You can refine them using the map if needed.
+                        Coordinates set from <strong>{form.watch('name')}</strong>. Review the map below to verify accuracy. Click the map to adjust if needed.
                       </Typography>
                     </Alert>
                     
@@ -361,7 +366,7 @@ export const DutyStationForm: React.FC<DutyStationFormProps> = ({
                               disabled
                               inputProps={{ step: 0.000001, min: -90, max: 90 }}
                               error={!!fieldState.error}
-                              helperText={fieldState.error?.message || 'Auto-populated from city search'}
+                              helperText={fieldState.error?.message || '✓ Auto-populated from city search'}
                             />
                           )}
                         />
@@ -382,19 +387,24 @@ export const DutyStationForm: React.FC<DutyStationFormProps> = ({
                               disabled
                               inputProps={{ step: 0.000001, min: -180, max: 180 }}
                               error={!!fieldState.error}
-                              helperText={fieldState.error?.message || 'Auto-populated from city search'}
+                              helperText={fieldState.error?.message || '✓ Auto-populated from city search'}
                             />
                           )}
                         />
                       </Grid>
                     </Grid>
-                    <Button
-                      variant="outlined"
-                      onClick={() => setShowMap(!showMap)}
-                      sx={{ mt: 1 }}
-                    >
-                      {showMap ? 'Hide Map' : '🗺️ Refine Coordinates on Map (Optional)'}
-                    </Button>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 1 }}>
+                      <Button
+                        variant="outlined"
+                        size="small"
+                        onClick={() => setShowMap(!showMap)}
+                      >
+                        {showMap ? '🔼 Hide Map' : '🔽 Show Map'}
+                      </Button>
+                      <Typography variant="caption" color="text.secondary">
+                        {showMap ? 'Click map to adjust location if needed' : 'Map auto-shows for verification'}
+                      </Typography>
+                    </Box>
                   </Grid>
                 )}
               </>
@@ -533,7 +543,13 @@ export const DutyStationForm: React.FC<DutyStationFormProps> = ({
                             latitude: existingStation.LATITUDE,
                             longitude: existingStation.LONGITUDE,
                           }
-                        : { latitude: 20, longitude: 0 }
+                        : // Use current form coordinates if city was selected
+                          form.watch('coordinates.latitude') !== 0 && form.watch('coordinates.longitude') !== 0
+                          ? {
+                              latitude: form.watch('coordinates.latitude'),
+                              longitude: form.watch('coordinates.longitude'),
+                            }
+                          : { latitude: 20, longitude: 0 } // Default only if no coordinates yet
                     }
                   />
                 </Box>
