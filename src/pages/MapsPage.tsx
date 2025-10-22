@@ -1,5 +1,6 @@
 // Interactive mapping page for UN Duty Stations
 import { useState, useMemo, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Container,
   Typography,
@@ -17,7 +18,8 @@ import {
 import {
   Search as SearchIcon,
   MyLocation as MyLocationIcon,
-  Refresh as RefreshIcon
+  Refresh as RefreshIcon,
+  Visibility as ViewIcon
 } from '@mui/icons-material';
 import { InteractiveMap } from '../components/mapping/InteractiveMap';
 import { MapControls, type TileLayer } from '../components/mapping/MapControls';
@@ -27,6 +29,7 @@ import { geocodeAddress } from '../services/geocodingService';
 import type { DutyStation, MapCoordinates } from '../types/dutyStation';
 
 function MapsPage() {
+  const navigate = useNavigate();
   const { dutyStations, countries, loading, error, refreshData } = useAppData();
   
   const [selectedLayer, setSelectedLayer] = useState<TileLayer>('osm');
@@ -383,13 +386,23 @@ function MapsPage() {
                   {selectedStation.LATITUDE.toFixed(6)}, {selectedStation.LONGITUDE.toFixed(6)}
         </Typography>
               </Box>
-              <Button
-                variant="outlined"
-                size="small"
-                onClick={() => setSelectedStation(null)}
-              >
-                Clear Selection
-              </Button>
+              <Stack direction="row" spacing={1}>
+                <Button
+                  variant="contained"
+                  size="small"
+                  startIcon={<ViewIcon />}
+                  onClick={() => navigate(`/duty-stations/${selectedStation.DS}/${selectedStation.CTY}`)}
+                >
+                  View Details
+                </Button>
+                <Button
+                  variant="outlined"
+                  size="small"
+                  onClick={() => setSelectedStation(null)}
+                >
+                  Clear
+                </Button>
+              </Stack>
             </Stack>
           </Paper>
         )}

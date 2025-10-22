@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Container,
   Typography,
@@ -28,16 +29,15 @@ import {
   Tooltip,
   Checkbox,
   Button,
-  Drawer,
-  Divider
 } from '@mui/material';
-import { Search as SearchIcon, Refresh as RefreshIcon, GetApp as ExportIcon, Info as InfoIcon } from '@mui/icons-material';
+import { Search as SearchIcon, Refresh as RefreshIcon, GetApp as ExportIcon, Visibility as ViewIcon } from '@mui/icons-material';
 import { useAppData } from '../hooks/useAppData';
 import type { DutyStation } from '../types';
 import SelectionToolbar from '../components/table/SelectionToolbar';
 import { exportDutyStationsToCSV, exportDutyStationsToExcel } from '../utils/exportUtils';
 
 function DutyStationsPage() {
+  const navigate = useNavigate();
   const {
     dutyStations,
     countries,
@@ -61,7 +61,6 @@ function DutyStationsPage() {
   const [sortBy, setSortBy] = useState<keyof DutyStation>('NAME');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
   const [selectedKeys, setSelectedKeys] = useState<Set<string>>(new Set());
-  const [detailStation, setDetailStation] = useState<DutyStation | null>(null);
 
   // Get filtered and paginated data
   const filteredDutyStations = useMemo(() => {
@@ -451,8 +450,12 @@ function DutyStationsPage() {
                   </TableCell>
                   <TableCell align="center">
                     <Tooltip title="View details">
-                      <IconButton size="small" onClick={() => setDetailStation(station)}>
-                        <InfoIcon />
+                      <IconButton 
+                        size="small" 
+                        onClick={() => navigate(`/duty-stations/${station.DS}/${station.CTY}`)}
+                        color="primary"
+                      >
+                        <ViewIcon />
                       </IconButton>
                     </Tooltip>
                   </TableCell>
@@ -473,23 +476,6 @@ function DutyStationsPage() {
           onRowsPerPageChange={handleChangeRowsPerPage}
         />
       </Paper>
-      <Drawer anchor="right" open={!!detailStation} onClose={() => setDetailStation(null)} sx={{ '& .MuiDrawer-paper': { width: 360 } }}>
-        <Box sx={{ p: 2 }}>
-          <Typography variant="h6">Duty Station Details</Typography>
-        </Box>
-        <Divider />
-        {detailStation && (
-          <Box sx={{ p: 2 }}>
-            <Typography variant="body2"><strong>Code:</strong> {detailStation.DS}</Typography>
-            <Typography variant="body2"><strong>Name:</strong> {detailStation.NAME}</Typography>
-            <Typography variant="body2"><strong>Country:</strong> {detailStation.COUNTRY || 'N/A'}</Typography>
-            <Typography variant="body2"><strong>Common Name:</strong> {detailStation.COMMONNAME || '-'}</Typography>
-            <Typography variant="body2"><strong>Latitude:</strong> {detailStation.LATITUDE}</Typography>
-            <Typography variant="body2"><strong>Longitude:</strong> {detailStation.LONGITUDE}</Typography>
-            <Typography variant="body2"><strong>Status:</strong> {detailStation.OBSOLETE === '1' ? 'Obsolete' : 'Active'}</Typography>
-          </Box>
-        )}
-      </Drawer>
     </Container>
   );
 }

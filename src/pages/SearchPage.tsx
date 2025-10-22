@@ -2,6 +2,7 @@
 // Following CEB Donor Codes proven patterns
 
 import React, { useState, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Container,
   Typography,
@@ -28,6 +29,7 @@ import { exportDutyStationsToCSV, exportDutyStationsToExcel } from '../utils/exp
 import type { DutyStation } from '../types';
 
 function SearchPage() {
+  const navigate = useNavigate();
   const searchHook = useSearch({
     debounceMs: 300,
     maxSuggestions: 10,
@@ -77,10 +79,9 @@ function SearchPage() {
     searchInputRef.current?.focus();
   };
 
-  // Handle view station (placeholder for future implementation)
+  // Handle view station - navigate to detail page
   const handleViewStation = (station: DutyStation) => {
-    console.log('View station:', station);
-    // Future: Open station detail modal or navigate to detail page
+    navigate(`/duty-stations/${station.DS}/${station.CTY}`);
   };
 
   // Handle export results

@@ -8,6 +8,7 @@ import Layout from './components/layout/Layout';
 import HomePage from './pages/HomePage';
 import SearchPage from './pages/SearchPage';
 import DutyStationsPage from './pages/DutyStationsPage';
+import StationDetailPage from './pages/StationDetailPage';
 import { DutyStationRequestPage } from './pages/DutyStationRequestPage';
 import { RequestsListPage } from './pages/RequestsListPage';
 import MapsPage from './pages/MapsPage';
@@ -84,6 +85,7 @@ function AppContent() {
             <Route path="/" element={<HomePage />} />
             <Route path="/search" element={<SearchPage />} />
             <Route path="/duty-stations" element={<DutyStationsPage />} />
+            <Route path="/duty-stations/:ds/:cty" element={<StationDetailPage />} />
             <Route path="/duty-station-request" element={<DutyStationRequestPage />} />
             <Route path="/requests-list" element={<RequestsListPage />} />
             <Route path="/maps" element={<MapsPage />} />

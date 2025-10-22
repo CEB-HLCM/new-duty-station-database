@@ -18,9 +18,12 @@ import {
   Alert,
   CircularProgress,
   TablePagination,
+  IconButton,
+  Tooltip,
 } from '@mui/material';
 import {
   FileDownload as ExportIcon,
+  Visibility as ViewIcon,
 } from '@mui/icons-material';
 import type { DutyStation, SearchResult } from '../../types';
 import type { UseSearchReturn } from '../../hooks/useSearch';
@@ -240,6 +243,7 @@ function SearchResults({
               <TableCell align="right">Latitude</TableCell>
               <TableCell align="right">Longitude</TableCell>
               <TableCell align="center">Status</TableCell>
+              <TableCell align="center">Actions</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -287,6 +291,17 @@ function SearchResults({
                       size="small"
                       variant={station.OBSOLETE === '1' ? 'outlined' : 'filled'}
                     />
+                  </TableCell>
+                  <TableCell align="center">
+                    <Tooltip title="View details">
+                      <IconButton
+                        size="small"
+                        onClick={() => onViewStation?.(station)}
+                        color="primary"
+                      >
+                        <ViewIcon fontSize="small" />
+                      </IconButton>
+                    </Tooltip>
                   </TableCell>
                 </TableRow>
               );

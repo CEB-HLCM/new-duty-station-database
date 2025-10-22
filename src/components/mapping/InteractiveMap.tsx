@@ -85,7 +85,7 @@ const MarkerClusterGroup = ({ stations, showClustering, onStationClick }: Marker
 
         const marker = L.marker([station.LATITUDE, station.LONGITUDE], { icon });
         
-        // Create popup content
+        // Create popup content (click marker to select station, use "View Details" button below map)
         const popupContent = `
           <div style="min-width: 200px; max-width: 300px;">
             <h3 style="margin: 0 0 8px 0; font-size: 16px;">${station.NAME}</h3>
@@ -109,7 +109,10 @@ const MarkerClusterGroup = ({ stations, showClustering, onStationClick }: Marker
               <div style="font-size: 11px; color: #666; margin-bottom: 2px;">Coordinates:</div>
               <div style="font-size: 12px; font-family: monospace;">${station.LATITUDE.toFixed(6)}, ${station.LONGITUDE.toFixed(6)}</div>
             </div>
-            ${isObsolete ? '<div style="display: inline-block; padding: 2px 8px; background: #d32f2f; color: white; border-radius: 12px; font-size: 11px;">Obsolete</div>' : ''}
+            ${isObsolete ? '<div style="display: inline-block; padding: 2px 8px; background: #d32f2f; color: white; border-radius: 12px; font-size: 11px; margin-bottom: 8px;">Obsolete</div>' : ''}
+            <div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid #eee; font-size: 11px; color: #888;">
+              Click marker to view full details below map
+            </div>
           </div>
         `;
 
@@ -167,7 +170,10 @@ const MarkerClusterGroup = ({ stations, showClustering, onStationClick }: Marker
               <div style="font-size: 11px; color: #666; margin-bottom: 2px;">Coordinates:</div>
               <div style="font-size: 12px; font-family: monospace;">${station.LATITUDE.toFixed(6)}, ${station.LONGITUDE.toFixed(6)}</div>
             </div>
-            ${isObsolete ? '<div style="display: inline-block; padding: 2px 8px; background: #d32f2f; color: white; border-radius: 12px; font-size: 11px;">Obsolete</div>' : ''}
+            ${isObsolete ? '<div style="display: inline-block; padding: 2px 8px; background: #d32f2f; color: white; border-radius: 12px; font-size: 11px; margin-bottom: 8px;">Obsolete</div>' : ''}
+            <div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid #eee; font-size: 11px; color: #888;">
+              Click marker to view full details below map
+            </div>
           </div>
         `;
 
