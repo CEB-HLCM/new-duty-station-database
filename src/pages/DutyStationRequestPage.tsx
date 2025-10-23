@@ -16,12 +16,14 @@ import {
   Add as AddIcon,
   List as ListIcon,
   History as HistoryIcon,
+  WarningAmber as WarningIcon,
 } from '@mui/icons-material';
 import { DutyStationForm } from '../components/form/DutyStationForm';
 import { RequestBasket } from '../components/basket/RequestBasket';
 import { RequestHistory } from '../components/basket/RequestHistory';
+import { SubmissionConfirmation } from '../components/email/SubmissionConfirmation';
 import { useBasket } from '../hooks/useBasket';
-import type { DutyStationRequest } from '../schemas/dutyStationSchema';
+import type { DutyStationRequest, SubmissionResult } from '../schemas/dutyStationSchema';
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -56,6 +58,8 @@ export const DutyStationRequestPage: React.FC = () => {
     message: '',
     severity: 'info',
   });
+  const [submissionResult, setSubmissionResult] = useState<SubmissionResult | null>(null);
+  const [showConfirmation, setShowConfirmation] = useState(false);
 
   const {
     basket,
@@ -66,6 +70,7 @@ export const DutyStationRequestPage: React.FC = () => {
     clearBasket,
     submitBasket,
     isSubmitting,
+    isEmailConfigured,
   } = useBasket();
 
   const handleFormSubmit = (request: DutyStationRequest) => {
@@ -87,22 +92,16 @@ export const DutyStationRequestPage: React.FC = () => {
 
   const handleBasketSubmit = async () => {
     try {
+      const requestCount = basket.length;
       const result = await submitBasket();
       
+      // Show submission confirmation dialog
+      setSubmissionResult(result);
+      setShowConfirmation(true);
+      
+      // If successful, switch to history tab after closing dialog
       if (result.success) {
-        setSnackbar({
-          open: true,
-          message: `Successfully submitted ${basket.length} request(s)! Confirmation: ${result.confirmationId}`,
-          severity: 'success',
-        });
-        // Switch to history tab to show submitted requests
-        setCurrentTab(2);
-      } else {
-        setSnackbar({
-          open: true,
-          message: `Submission failed: ${result.errors?.join(', ')}`,
-          severity: 'error',
-        });
+        // Dialog will handle the navigation on close
       }
     } catch (error) {
       setSnackbar({
@@ -111,6 +110,18 @@ export const DutyStationRequestPage: React.FC = () => {
         severity: 'error',
       });
     }
+  };
+
+  const handleConfirmationClose = () => {
+    setShowConfirmation(false);
+    
+    // If submission was successful, switch to history tab
+    if (submissionResult?.success) {
+      setCurrentTab(2);
+    }
+    
+    // Clear result after a delay
+    setTimeout(() => setSubmissionResult(null), 300);
   };
 
   const handleBasketClear = () => {
@@ -168,7 +179,15 @@ export const DutyStationRequestPage: React.FC = () => {
           </Box>
         </Box>
 
-        {/* Info Alert */}
+        {/* Info Alerts */}
+        {!isEmailConfigured && (
+          <Alert severity="warning" icon={<WarningIcon />} sx={{ mb: 2 }}>
+            <strong>Email Not Configured:</strong> EmailJS is not configured. Requests will be simulated
+            and saved to history, but no actual email will be sent. Configure EmailJS environment variables
+            to enable real email submissions.
+          </Alert>
+        )}
+        
         <Alert severity="info" sx={{ mb: 3 }}>
           <strong>Note:</strong> Requests are queued in your basket and can be submitted in bulk.
           Use drag-and-drop to prioritize requests before submission.
@@ -252,6 +271,14 @@ export const DutyStationRequestPage: React.FC = () => {
             {snackbar.message}
           </Alert>
         </Snackbar>
+
+        {/* Submission Confirmation Dialog */}
+        <SubmissionConfirmation
+          open={showConfirmation}
+          onClose={handleConfirmationClose}
+          result={submissionResult}
+          requestCount={submissionResult ? basket.length : 0}
+        />
       </Box>
     </Container>
   );

@@ -1,6 +1,7 @@
 // Request basket service with localStorage persistence
 import type { BasketItem, DutyStationRequest, SubmissionResult } from '../schemas/dutyStationSchema';
 import type { BasketStats, RequestHistoryEntry } from '../types/request';
+import { sendBatchRequests, isEmailConfigured } from './emailService';
 
 const BASKET_STORAGE_KEY = 'un_duty_station_basket';
 const HISTORY_STORAGE_KEY = 'un_duty_station_history';
@@ -206,13 +207,26 @@ export const addToHistory = (item: BasketItem, confirmationId?: string): void =>
 
 /**
  * Submit basket items (batch submission)
+ * Sends requests via EmailJS and updates history
  */
 export const submitBasket = async (items: BasketItem[]): Promise<SubmissionResult> => {
   try {
-    // In a real implementation, this would call an API endpoint
-    // For now, we'll simulate submission and add to history
+    if (items.length === 0) {
+      return {
+        success: false,
+        submittedAt: new Date(),
+        errors: ['No items to submit'],
+      };
+    }
+
+    // Send email via EmailJS (or simulate if not configured)
+    const emailResult = await sendBatchRequests(items);
     
-    const confirmationId = `CONF-${generateId().toUpperCase()}`;
+    if (!emailResult.success) {
+      return emailResult;
+    }
+
+    const confirmationId = emailResult.confirmationId || `CONF-${generateId().toUpperCase()}`;
     
     // Add all items to history
     items.forEach(item => {
@@ -238,6 +252,13 @@ export const submitBasket = async (items: BasketItem[]): Promise<SubmissionResul
       errors: [error instanceof Error ? error.message : 'Unknown error occurred'],
     };
   }
+};
+
+/**
+ * Check if email submission is properly configured
+ */
+export const isSubmissionConfigured = (): boolean => {
+  return isEmailConfigured();
 };
 
 /**

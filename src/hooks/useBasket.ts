@@ -13,7 +13,9 @@ import {
   submitBasket as submitBasketService,
   exportBasketAsJson,
   importBasketFromJson,
+  isSubmissionConfigured,
 } from '../services/basketService';
+import { initializeEmailJS, getEmailConfigStatus } from '../services/emailService';
 
 export interface UseBasketReturn {
   basket: BasketItem[];
@@ -27,6 +29,7 @@ export interface UseBasketReturn {
   exportAsJson: () => string;
   importFromJson: (jsonString: string) => boolean;
   isSubmitting: boolean;
+  isEmailConfigured: boolean;
 }
 
 /**
@@ -36,11 +39,19 @@ export const useBasket = (): UseBasketReturn => {
   const [basket, setBasket] = useState<BasketItem[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Initialize EmailJS on mount
+  useEffect(() => {
+    initializeEmailJS();
+  }, []);
+
   // Load basket from localStorage on mount
   useEffect(() => {
     const loadedBasket = loadBasket();
     setBasket(loadedBasket);
   }, []);
+
+  // Check if email is configured
+  const isEmailConfigured = isSubmissionConfigured();
 
   // Calculate stats whenever basket changes
   const stats = getBasketStatsService(basket);
@@ -147,6 +158,7 @@ export const useBasket = (): UseBasketReturn => {
     exportAsJson,
     importFromJson,
     isSubmitting,
+    isEmailConfigured,
   };
 };
 
