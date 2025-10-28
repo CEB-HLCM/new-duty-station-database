@@ -61,13 +61,19 @@ export const addDutyStationSchema = baseRequestSchema.extend({
   country: z.string().min(1, 'Country is required'),
   countryCode: z
     .string()
-    .length(3, 'Country code must be 3 characters')
-    .toUpperCase(),
+    .min(1, 'Country code is required')
+    .max(10, 'Country code must be less than 10 characters'),
   commonName: z.string().max(100, 'Common name must be less than 100 characters').optional(),
-  coordinates: coordinateSchema,
+  coordinates: coordinateSchema.refine(
+    (coords) => coords.latitude !== 0 || coords.longitude !== 0,
+    { message: 'Please select a valid city to populate coordinates' }
+  ),
+  // Proposed code is optional - system will auto-generate if not provided
   proposedCode: z
-    .string()
-    .regex(/^[A-Z]{3}$/, 'Duty station code must be 3 uppercase letters')
+    .union([
+      z.string().regex(/^[A-Z]{3}$/, 'Duty station code must be 3 uppercase letters'),
+      z.literal(''),
+    ])
     .optional(),
 });
 
@@ -80,7 +86,10 @@ export const updateDutyStationSchema = baseRequestSchema.extend({
     .string()
     .min(1, 'Duty station code is required')
     .max(10, 'Code must be less than 10 characters'),
-  countryCode: z.string().length(3, 'Country code must be 3 characters').toUpperCase(),
+  countryCode: z
+    .string()
+    .min(1, 'Country code is required')
+    .max(10, 'Country code must be less than 10 characters'),
   currentData: z.object({
     name: z.string(),
     country: z.string(),
@@ -100,7 +109,10 @@ export const updateDutyStationSchema = baseRequestSchema.extend({
 export const removeDutyStationSchema = baseRequestSchema.extend({
   requestType: z.literal(RequestType.REMOVE),
   dutyStationCode: z.string().min(1, 'Duty station code is required'),
-  countryCode: z.string().length(3, 'Country code must be 3 characters').toUpperCase(),
+  countryCode: z
+    .string()
+    .min(1, 'Country code is required')
+    .max(10, 'Country code must be less than 10 characters'),
   currentData: z.object({
     name: z.string(),
     country: z.string(),
@@ -114,7 +126,10 @@ export const removeDutyStationSchema = baseRequestSchema.extend({
 export const coordinateUpdateSchema = baseRequestSchema.extend({
   requestType: z.literal(RequestType.COORDINATE_UPDATE),
   dutyStationCode: z.string().min(1, 'Duty station code is required'),
-  countryCode: z.string().length(3, 'Country code must be 3 characters').toUpperCase(),
+  countryCode: z
+    .string()
+    .min(1, 'Country code is required')
+    .max(10, 'Country code must be less than 10 characters'),
   stationName: z.string(),
   currentCoordinates: coordinateSchema,
   proposedCoordinates: coordinateSchema,
