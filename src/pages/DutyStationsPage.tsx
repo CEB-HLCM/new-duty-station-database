@@ -278,11 +278,13 @@ function DutyStationsPage() {
                 label="Country"
               >
                 <MenuItem value="all">All Countries</MenuItem>
-                {countries.map((country) => (
-                  <MenuItem key={country.CTYCD} value={country.NAME}>
-                    {country.NAME}
-                  </MenuItem>
-                ))}
+                {countries
+                  .filter((country) => country.OBSOLETE !== '1')
+                  .map((country) => (
+                    <MenuItem key={country.CTYCD} value={country.NAME}>
+                      {country.NAME}
+                    </MenuItem>
+                  ))}
               </Select>
             </FormControl>
           </Grid>

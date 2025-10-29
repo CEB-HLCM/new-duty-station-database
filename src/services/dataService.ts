@@ -7,13 +7,37 @@ const GITHUB_RAW_BASE = 'https://raw.githubusercontent.com/CEB-HLCM/HR-Public-Co
 const DUTY_STATIONS_CSV_URL = `${GITHUB_RAW_BASE}/DSCITYCD.csv`;
 const COUNTRIES_CSV_URL = `${GITHUB_RAW_BASE}/DSCTRYCD.csv`;
 
-// CSV parsing utility
+// CSV parsing utility - handles quoted values with commas
 function parseCSV(csvText: string): Record<string, string>[] {
   const lines = csvText.trim().split('\n');
-  const headers = lines[0].split(',').map(header => header.trim().replace(/"/g, ''));
+  
+  // Parse CSV line respecting quotes
+  const parseLine = (line: string): string[] => {
+    const result: string[] = [];
+    let current = '';
+    let inQuotes = false;
+    
+    for (let i = 0; i < line.length; i++) {
+      const char = line[i];
+      
+      if (char === '"') {
+        inQuotes = !inQuotes;
+      } else if (char === ',' && !inQuotes) {
+        result.push(current.trim());
+        current = '';
+      } else {
+        current += char;
+      }
+    }
+    result.push(current.trim());
+    
+    return result;
+  };
+  
+  const headers = parseLine(lines[0]);
   
   return lines.slice(1).map(line => {
-    const values = line.split(',').map(value => value.trim().replace(/"/g, ''));
+    const values = parseLine(line);
     const record: Record<string, string> = {};
     
     headers.forEach((header, index) => {
@@ -75,14 +99,28 @@ export async function fetchCountries(): Promise<Country[]> {
     const csvText = await response.text();
     const rawData = parseCSV(csvText);
     
+    // DEBUG: Log the first few rows to see actual structure
+    console.log('🔍 COUNTRIES CSV - First row keys:', Object.keys(rawData[0]));
+    console.log('🔍 COUNTRIES CSV - First 3 rows:', rawData.slice(0, 3));
+    
     // Transform raw CSV data to Country interface
-    return rawData.map(row => ({
+    const countries = rawData.map(row => ({
       CTYCD: row.CTYCD || '',
       NAME: row.NAME || '',
       REGION: row.REGION || '',
       ISO2: row.ISO2 || '',
-      ISO3: row.ISO3 || ''
+      ISO3: row.ISO3 || '',
+      OBSOLETE: row.OBSOLETE || '0'
     }));
+    
+    // DEBUG: Log Eswatini/Swaziland entries specifically
+    const eswatiniEntries = countries.filter(c => c.CTYCD === '4030');
+    console.log('🔍 ESWATINI/SWAZILAND ENTRIES:', eswatiniEntries);
+    eswatiniEntries.forEach(entry => {
+      console.log(`   - ${entry.NAME}: OBSOLETE="${entry.OBSOLETE}" (type: ${typeof entry.OBSOLETE}, value: ${JSON.stringify(entry.OBSOLETE)})`);
+    });
+    
+    return countries;
     
   } catch (error) {
     console.error('Failed to fetch countries:', error);
@@ -98,11 +136,39 @@ export async function fetchDutyStationsWithCountries(): Promise<DutyStation[]> {
       fetchCountries()
     ]);
     
-    // Create country lookup map
+    // Create country lookup map, filtering out obsolete countries
+    // When duplicate country codes exist, prioritize non-obsolete entries
     const countryMap = new Map<string, string>();
+    
+    // DEBUG: Log country filtering process
+    console.log('🔍 Building country map...');
+    
+    // First pass: add all non-obsolete countries
     countries.forEach(country => {
-      countryMap.set(country.CTYCD, country.NAME);
+      if (country.CTYCD === '4030') {
+        console.log(`🔍 Checking ${country.NAME}: OBSOLETE="${country.OBSOLETE}" (comparing !== '1': ${country.OBSOLETE !== '1'})`);
+      }
+      
+      if (country.OBSOLETE !== '1') {
+        countryMap.set(country.CTYCD, country.NAME);
+        if (country.CTYCD === '4030') {
+          console.log('✅ Added NON-OBSOLETE:', country);
+        }
+      } else if (country.CTYCD === '4030') {
+        console.log('❌ Skipped OBSOLETE:', country);
+      }
     });
+    
+    // Second pass: add obsolete countries only if no non-obsolete entry exists
+    // This ensures backward compatibility for edge cases
+    countries.forEach(country => {
+      if (country.OBSOLETE === '1' && !countryMap.has(country.CTYCD)) {
+        countryMap.set(country.CTYCD, country.NAME);
+      }
+    });
+    
+    // DEBUG: Check what's in the map for code 4030
+    console.log('🔍 Country code 4030 maps to:', countryMap.get('4030'));
     
     // Add country names to duty stations
     const enrichedDutyStations = dutyStations.map(station => ({
@@ -160,9 +226,26 @@ export function setCachedData<T>(key: string, data: T, ttlMs: number = 5 * 60 * 
   });
 }
 
+// Clear specific cache key or all cache
+export function clearCache(key?: string): void {
+  if (key) {
+    cache.delete(key);
+    console.log(`Cache cleared for key: ${key}`);
+  } else {
+    cache.clear();
+    console.log('All cache cleared');
+  }
+}
+
 // Cached fetch functions
-export async function fetchDutyStationsWithCountriesCached(): Promise<DutyStation[]> {
+export async function fetchDutyStationsWithCountriesCached(forceRefresh: boolean = false): Promise<DutyStation[]> {
   const cacheKey = 'duty-stations-with-countries';
+  
+  // Clear cache if force refresh is requested
+  if (forceRefresh) {
+    clearCache(cacheKey);
+  }
+  
   const cached = getCachedData<DutyStation[]>(cacheKey);
   
   if (cached) {
@@ -170,6 +253,7 @@ export async function fetchDutyStationsWithCountriesCached(): Promise<DutyStatio
     return cached;
   }
   
+  console.log('Fetching fresh duty stations data...');
   const data = await fetchDutyStationsWithCountries();
   setCachedData(cacheKey, data);
   return data;

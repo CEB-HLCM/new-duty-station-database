@@ -231,14 +231,16 @@ export function useSearch(options: UseSearchOptions = {}) {
     });
   }, [dutyStations, isReady]);
 
-  // Memoized country options for filters
+  // Memoized country options for filters (excluding obsolete countries)
   const countryOptions = useMemo(() => {
     return [
       { value: 'all', label: 'All Countries' },
-      ...countries.map(country => ({
-        value: country.NAME,
-        label: country.NAME,
-      })),
+      ...countries
+        .filter(country => country.OBSOLETE !== '1')
+        .map(country => ({
+          value: country.NAME,
+          label: country.NAME,
+        })),
     ];
   }, [countries]);
 

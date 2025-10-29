@@ -54,10 +54,10 @@ export const CountrySelector: React.FC<CountrySelectorProps> = ({
   console.log('CountrySelector - Sample country:', countries[0]);
   console.log('CountrySelector - Selected region:', region);
 
-  // Filter countries by region
+  // Filter countries by region and exclude obsolete countries
   const filteredCountries = region
-    ? countries.filter((c: Country) => c.REGION === region)
-    : countries;
+    ? countries.filter((c: Country) => c.REGION === region && c.OBSOLETE !== '1')
+    : countries.filter((c: Country) => c.OBSOLETE !== '1');
 
   console.log('CountrySelector - Filtered countries:', filteredCountries.length);
   if (region) {

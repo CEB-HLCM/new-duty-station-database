@@ -91,13 +91,14 @@ export function DataProvider({ children }: DataProviderProps) {
   const [state, dispatch] = useReducer(dataReducer, initialState);
 
   // Fetch data function
-  const fetchData = async () => {
+  const fetchData = async (forceRefresh: boolean = false) => {
     try {
       dispatch({ type: 'FETCH_START' });
       
       // Fetch both duty stations and countries in parallel
+      // Force refresh clears cache to get latest data with obsolete country fixes
       const [dutyStations, countries] = await Promise.all([
-        fetchDutyStationsWithCountriesCached(),
+        fetchDutyStationsWithCountriesCached(forceRefresh),
         fetchCountries()
       ]);
 
@@ -116,10 +117,10 @@ export function DataProvider({ children }: DataProviderProps) {
     }
   };
 
-  // Refresh data function
+  // Refresh data function - forces cache clear to get latest data
   const refreshData = async () => {
     dispatch({ type: 'REFRESH_DATA' });
-    await fetchData();
+    await fetchData(true); // Force refresh to clear cache
   };
 
   // Clear error function
@@ -137,7 +138,10 @@ export function DataProvider({ children }: DataProviderProps) {
   };
 
   const getUniqueCountries = (): string[] => {
-    return state.countries.map(country => country.NAME);
+    // Filter out obsolete countries and return only active country names
+    return state.countries
+      .filter(country => country.OBSOLETE !== '1')
+      .map(country => country.NAME);
   };
 
   const isDataLoaded = state.dutyStations.length > 0 && !state.loading;
