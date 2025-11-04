@@ -1,6 +1,6 @@
 // Custom hook for form data persistence with localStorage
 import { useEffect, useCallback } from 'react';
-import type { UseFormReturn } from 'react-hook-form';
+import type { UseFormReturn, Path } from 'react-hook-form';
 import type { RequestType } from '../types/request';
 
 const FORM_PERSISTENCE_KEY_PREFIX = 'un_duty_station_form_';
@@ -42,7 +42,7 @@ export const useFormPersistence = <TFormData extends Record<string, unknown>>(
         if (hoursSinceLastSave < 24 && parsed.formData) {
           // Restore form data
           Object.entries(parsed.formData).forEach(([key, value]) => {
-            form.setValue(key as keyof TFormData, value as TFormData[keyof TFormData]);
+            form.setValue(key as Path<TFormData>, value as TFormData[Path<TFormData>]);
           });
         } else {
           // Clear old data

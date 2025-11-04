@@ -138,12 +138,20 @@ function StationDetailPage() {
 
     const request: DutyStationRequest = {
       requestType: 'coordinate_update',
-      ds: station.DS,
-      cty: station.CTY,
-      name: station.NAME,
-      latitude: newLat,
-      longitude: newLng,
-      commonName: station.COMMONNAME || undefined,
+      dutyStationCode: station.DS,
+      countryCode: station.CTY,
+      stationName: station.NAME,
+      currentCoordinates: {
+        latitude: station.LATITUDE,
+        longitude: station.LONGITUDE,
+      },
+      proposedCoordinates: {
+        latitude: newLat,
+        longitude: newLng,
+      },
+      requestDate: new Date(),
+      submittedBy: '', // Will be filled by form
+      organization: '', // Will be filled by form
       justification: justification || 'Coordinate correction requested',
     };
 

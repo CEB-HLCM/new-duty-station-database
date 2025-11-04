@@ -63,3 +63,32 @@ export interface FormPersistenceData {
   lastSaved: Date;
   formType: RequestType;
 }
+
+/**
+ * Request basket item
+ */
+export interface RequestBasketItem {
+  id: string;
+  request: BaseRequest;
+  addedAt: Date;
+  priority: number;
+  status: RequestStatus;
+}
+
+/**
+ * Request basket
+ */
+export interface RequestBasket {
+  items: RequestBasketItem[];
+  lastUpdated: Date;
+}
+
+/**
+ * Basket action type
+ */
+export type BasketAction = 
+  | { type: 'ADD'; payload: BaseRequest }
+  | { type: 'REMOVE'; payload: string }
+  | { type: 'UPDATE'; payload: { id: string; updates: Partial<RequestBasketItem> } }
+  | { type: 'CLEAR' }
+  | { type: 'REORDER'; payload: { id: string; newPriority: number } };

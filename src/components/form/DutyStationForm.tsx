@@ -73,9 +73,9 @@ export const DutyStationForm: React.FC<DutyStationFormProps> = ({
     }
   };
 
-  const form = useForm({
-    resolver: zodResolver(getSchema()),
-    defaultValues: initialData || {
+  const form = useForm<Partial<DutyStationRequest>>({
+    resolver: zodResolver(getSchema()) as any,
+    defaultValues: (initialData || {
       requestType,
       submittedBy: '',
       organization: '',
@@ -119,7 +119,7 @@ export const DutyStationForm: React.FC<DutyStationFormProps> = ({
         latitude: 0,
         longitude: 0,
       },
-    },
+    }) as Partial<DutyStationRequest>,
   });
 
   // Form persistence
@@ -195,14 +195,14 @@ export const DutyStationForm: React.FC<DutyStationFormProps> = ({
 
   const handleCoordinateSelect = (latitude: number, longitude: number) => {
     if (requestType === RequestType.ADD) {
-      form.setValue('coordinates.latitude', latitude);
-      form.setValue('coordinates.longitude', longitude);
+      form.setValue('coordinates.latitude' as any, latitude);
+      form.setValue('coordinates.longitude' as any, longitude);
     } else if (requestType === RequestType.COORDINATE_UPDATE) {
-      form.setValue('proposedCoordinates.latitude', latitude);
-      form.setValue('proposedCoordinates.longitude', longitude);
+      form.setValue('proposedCoordinates.latitude' as any, latitude);
+      form.setValue('proposedCoordinates.longitude' as any, longitude);
     } else if (requestType === RequestType.UPDATE) {
-      form.setValue('proposedChanges.coordinates.latitude', latitude);
-      form.setValue('proposedChanges.coordinates.longitude', longitude);
+      form.setValue('proposedChanges.coordinates.latitude' as any, latitude);
+      form.setValue('proposedChanges.coordinates.longitude' as any, longitude);
     }
     setShowMap(false);
   };
@@ -452,7 +452,7 @@ export const DutyStationForm: React.FC<DutyStationFormProps> = ({
 
                 <Grid size={{ xs: 12, md: 6 }}>
                   <Controller
-                    name="proposedChanges.name"
+                    name={"proposedChanges.name" as any}
                     control={form.control}
                     defaultValue=""
                     render={({ field, fieldState }) => (
@@ -471,7 +471,7 @@ export const DutyStationForm: React.FC<DutyStationFormProps> = ({
 
                 <Grid size={{ xs: 12, md: 6 }}>
                   <Controller
-                    name="proposedChanges.commonName"
+                    name={"proposedChanges.commonName" as any}
                     control={form.control}
                     defaultValue=""
                     render={({ field, fieldState }) => (
@@ -513,7 +513,7 @@ export const DutyStationForm: React.FC<DutyStationFormProps> = ({
                   <Grid container spacing={2}>
                     <Grid size={{ xs: 12, sm: 6 }}>
                       <Controller
-                        name="proposedCoordinates.latitude"
+                        name={"proposedCoordinates.latitude" as any}
                         control={form.control}
                         defaultValue={0}
                         render={({ field, fieldState }) => (
@@ -533,7 +533,7 @@ export const DutyStationForm: React.FC<DutyStationFormProps> = ({
                     </Grid>
                     <Grid size={{ xs: 12, sm: 6 }}>
                       <Controller
-                        name="proposedCoordinates.longitude"
+                        name={"proposedCoordinates.longitude" as any}
                         control={form.control}
                         defaultValue={0}
                         render={({ field, fieldState }) => (

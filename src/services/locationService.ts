@@ -206,7 +206,7 @@ export const searchCitiesNominatim = async (
     
     // Sort by confidence (high > medium > low)
     const sorted = deduplicated.sort((a, b) => {
-      const confidenceOrder = { high: 0, medium: 1, low: 2 };
+      const confidenceOrder: Record<'high' | 'medium' | 'low', number> = { high: 0, medium: 1, low: 2 };
       return confidenceOrder[a.confidence] - confidenceOrder[b.confidence];
     });
     
