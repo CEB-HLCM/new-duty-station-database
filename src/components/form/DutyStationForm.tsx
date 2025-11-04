@@ -315,8 +315,8 @@ export const DutyStationForm: React.FC<DutyStationFormProps> = ({
                     onRegionChange={setSelectedRegion}
                     label="Country *"
                     required={true}
-                    error={!!form.formState.errors.country}
-                    helperText={form.formState.errors.country?.message}
+                    error={!!(form.formState.errors as any).country}
+                    helperText={(form.formState.errors as any).country?.message}
                   />
                 </Grid>
 
@@ -337,8 +337,8 @@ export const DutyStationForm: React.FC<DutyStationFormProps> = ({
                       countryName={selectedCountry.NAME}
                       label="City/Town Name *"
                       required={true}
-                      error={!!form.formState.errors.name}
-                      helperText={form.formState.errors.name?.message}
+                      error={!!(form.formState.errors as any).name}
+                      helperText={(form.formState.errors as any).name?.message}
                     />
                   </Grid>
                 )}

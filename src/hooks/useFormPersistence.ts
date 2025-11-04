@@ -42,7 +42,7 @@ export const useFormPersistence = <TFormData extends Record<string, unknown>>(
         if (hoursSinceLastSave < 24 && parsed.formData) {
           // Restore form data
           Object.entries(parsed.formData).forEach(([key, value]) => {
-            form.setValue(key as Path<TFormData>, value as TFormData[Path<TFormData>]);
+            form.setValue(key as Path<TFormData>, value as any);
           });
         } else {
           // Clear old data

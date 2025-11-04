@@ -324,7 +324,7 @@ function SearchResults({
       )}
 
       {/* Performance Info (Development) */}
-      {process.env.NODE_ENV === 'development' && performanceMetrics.searchTime > 0 && (
+      {import.meta.env.DEV && performanceMetrics.searchTime > 0 && (
         <Box sx={{ mt: 1, p: 1, bgcolor: 'background.paper', borderRadius: 1 }}>
           <Typography variant="caption" color="text.secondary">
             Search completed in {performanceMetrics.searchTime.toFixed(2)}ms

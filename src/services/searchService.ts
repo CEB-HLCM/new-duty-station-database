@@ -350,7 +350,7 @@ export function measureSearchPerformance<T>(
   const duration = endTime - startTime;
   
   // Log performance metrics (only in development)
-  if (process.env.NODE_ENV === 'development') {
+  if (import.meta.env.DEV) {
     console.log(`Search Performance - ${searchType}:`, {
       query,
       duration: `${duration.toFixed(2)}ms`,

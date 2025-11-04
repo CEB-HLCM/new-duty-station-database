@@ -178,7 +178,7 @@ function SearchFilters({
             </Grid>
 
             {/* Performance Metrics (Development) */}
-            {process.env.NODE_ENV === 'development' && (
+            {import.meta.env.DEV && (
               <Grid size={{ xs: 12 }}>
                 <Typography variant="subtitle2" gutterBottom>
                   Performance Metrics:

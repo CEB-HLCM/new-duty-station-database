@@ -145,7 +145,12 @@ export const searchCitiesNominatim = async (
       return [];
     }
 
-    const filtered = data
+    // Define interface for internal use with importance field
+    interface CitySearchResultWithImportance extends CitySearchResult {
+      importance: number;
+    }
+
+    const filtered: CitySearchResultWithImportance[] = data
       .filter((result: any) => {
         // Only include cities, towns, villages, and administrative areas
         // Note: Some major cities like Paris are classified as 'administrative' in Nominatim
@@ -156,12 +161,14 @@ export const searchCitiesNominatim = async (
         // Accept if type is valid OR if it's a place/boundary
         return validTypes.includes(resultType) || resultClass === 'place' || resultClass === 'boundary';
       })
-      .map((result: any) => {
+      .map((result: any): CitySearchResultWithImportance => {
         const displayName = result.display_name || '';
         const parts = displayName.split(',').map((p: string) => p.trim());
         const cityName = parts[0] || result.name;
         const country = result.address?.country || parts[parts.length - 1];
         const countryCode = result.address?.country_code?.toUpperCase() || '';
+        const importance = result.importance || 0;
+        const confidence: 'high' | 'medium' | 'low' = importance > 0.5 ? 'high' : importance > 0.3 ? 'medium' : 'low';
 
         return {
           name: cityName,
@@ -172,15 +179,15 @@ export const searchCitiesNominatim = async (
             longitude: parseFloat(result.lon),
           },
           summary: displayName,
-          confidence: result.importance > 0.5 ? 'high' : result.importance > 0.3 ? 'medium' : 'low',
-          importance: result.importance || 0, // Keep importance for sorting
+          confidence: confidence,
+          importance: importance,
         };
       });
     
     console.log(`Nominatim filtered results (before deduplication): ${filtered.length} cities/towns`);
     
     // Deduplicate by name and coordinate proximity (within ~5km = 0.05 degrees)
-    const deduplicated = filtered.reduce((acc: any[], current: any) => {
+    const deduplicated = filtered.reduce((acc: CitySearchResultWithImportance[], current: CitySearchResultWithImportance) => {
       const isDuplicate = acc.some(item => 
         item.name === current.name &&
         Math.abs(item.coordinates.latitude - current.coordinates.latitude) < 0.05 &&
@@ -202,7 +209,7 @@ export const searchCitiesNominatim = async (
       }
       
       return acc;
-    }, []);
+    }, [] as CitySearchResultWithImportance[]);
     
     // Sort by confidence (high > medium > low)
     const sorted = deduplicated.sort((a, b) => {
