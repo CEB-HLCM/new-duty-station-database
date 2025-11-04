@@ -6,12 +6,26 @@ import type { RequestType } from '../types/request';
 /**
  * EmailJS configuration
  * These should be set in environment variables
+ * Default values from old codebase for backward compatibility
+ * Note: Old codebase uses 'template_7tyy0w9' and 'b-W03p-FeqGlLK92_' in actual send
  */
 const EMAIL_CONFIG = {
-  serviceId: import.meta.env.VITE_EMAILJS_SERVICE_ID || 'service_un_duty_station',
-  templateId: import.meta.env.VITE_EMAILJS_TEMPLATE_ID || 'template_duty_station',
-  publicKey: import.meta.env.VITE_EMAILJS_PUBLIC_KEY || '',
+  serviceId: import.meta.env.VITE_EMAILJS_SERVICE_ID || 'add_new_duty_station',
+  templateId: import.meta.env.VITE_EMAILJS_TEMPLATE_ID || 'template_7tyy0w9',
+  publicKey: import.meta.env.VITE_EMAILJS_PUBLIC_KEY || 'b-W03p-FeqGlLK92_',
 };
+
+/**
+ * Fixed chunk size for splitting requests into batches
+ * Matches old codebase behavior: 15 requests per email
+ */
+const CHUNK_SIZE = 15;
+
+/**
+ * Delay between email sends (in milliseconds)
+ * Matches old codebase: 2 second delay between batches
+ */
+const EMAIL_SEND_DELAY = 2000;
 
 /**
  * Initialize EmailJS with public key
@@ -229,7 +243,70 @@ export const sendSingleRequest = async (
 };
 
 /**
+ * Split items into chunks of fixed size (matches old codebase pattern)
+ */
+const splitIntoChunks = (items: BasketItem[]): BasketItem[][] => {
+  if (items.length === 0) return [];
+  
+  const chunks: BasketItem[][] = [];
+  
+  // Split into chunks of CHUNK_SIZE (15 requests per email)
+  for (let i = 0; i < items.length; i += CHUNK_SIZE) {
+    chunks.push(items.slice(i, i + CHUNK_SIZE));
+  }
+  
+  return chunks;
+};
+
+/**
+ * Send a single batch email
+ */
+const sendSingleBatch = async (
+  batch: BasketItem[],
+  batchNumber: number,
+  totalBatches: number
+): Promise<{ success: boolean; error?: string }> => {
+  try {
+    const templateParams = {
+      to_name: 'UN CEB Duty Station Team',
+      from_name: batch[0]?.request.submittedBy || 'UN Staff Member',
+      organization: batch[0]?.request.organization || 'UN Organization',
+      request_count: batch.length,
+      request_summary: generateBatchSummary(batch),
+      request_details: formatBatchRequestDetails(batch),
+      request_date: new Date().toLocaleDateString(),
+      reply_to: '', // Could be added from form if needed
+      batch_info: totalBatches > 1 ? `Batch ${batchNumber} of ${totalBatches}` : '',
+    };
+
+    const response = await emailjs.send(
+      EMAIL_CONFIG.serviceId,
+      EMAIL_CONFIG.templateId,
+      templateParams
+    );
+
+    if (response.status === 200) {
+      return { success: true };
+    } else {
+      return {
+        success: false,
+        error: `Email send failed with status: ${response.status} (Batch ${batchNumber}/${totalBatches})`,
+      };
+    }
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error 
+        ? `${error.message} (Batch ${batchNumber}/${totalBatches})`
+        : `Unknown error occurred (Batch ${batchNumber}/${totalBatches})`,
+    };
+  }
+};
+
+/**
  * Send batch of requests via EmailJS
+ * Automatically splits into chunks of 15 requests per email (matches old codebase)
+ * Sends sequentially with 2 second delays between emails
  */
 export const sendBatchRequests = async (
   items: BasketItem[]
@@ -253,34 +330,49 @@ export const sendBatchRequests = async (
   }
 
   try {
-    const templateParams = {
-      to_name: 'UN CEB Duty Station Team',
-      from_name: items[0]?.request.submittedBy || 'UN Staff Member',
-      organization: items[0]?.request.organization || 'UN Organization',
-      request_count: items.length,
-      request_summary: generateBatchSummary(items),
-      request_details: formatBatchRequestDetails(items),
-      request_date: new Date().toLocaleDateString(),
-      reply_to: '', // Could be added from form if needed
-    };
+    // Split into chunks of 15 (matches old codebase)
+    const chunks = splitIntoChunks(items);
+    const totalBatches = chunks.length;
 
-    const response = await emailjs.send(
-      EMAIL_CONFIG.serviceId,
-      EMAIL_CONFIG.templateId,
-      templateParams
-    );
+    console.log(`[EmailJS] Sending ${items.length} requests in ${totalBatches} batch(es) (${CHUNK_SIZE} requests per batch)`);
 
-    if (response.status === 200) {
+    // Send batches sequentially with delays (matches old codebase pattern)
+    const errors: string[] = [];
+    let allSuccessful = true;
+
+    for (let i = 0; i < chunks.length; i++) {
+      const batch = chunks[i];
+      const batchNumber = i + 1;
+      
+      console.log(`[EmailJS] Sending batch ${batchNumber}/${totalBatches} (${batch.length} requests)`);
+      
+      const result = await sendSingleBatch(batch, batchNumber, totalBatches);
+      
+      if (!result.success) {
+        allSuccessful = false;
+        if (result.error) {
+          errors.push(result.error);
+        }
+      }
+
+      // Delay between batches (2 seconds, matches old codebase)
+      if (i < chunks.length - 1) {
+        await new Promise(resolve => setTimeout(resolve, EMAIL_SEND_DELAY));
+      }
+    }
+
+    if (allSuccessful) {
+      const confirmationId = `BATCH-${Date.now().toString(36).toUpperCase()}${totalBatches > 1 ? `-${totalBatches}emails` : ''}`;
       return {
         success: true,
         submittedAt: new Date(),
-        confirmationId: `BATCH-${Date.now().toString(36).toUpperCase()}`,
+        confirmationId,
       };
     } else {
       return {
         success: false,
         submittedAt: new Date(),
-        errors: [`Email send failed with status: ${response.status}`],
+        errors: errors.length > 0 ? errors : ['Some batches failed to send'],
       };
     }
   } catch (error) {
