@@ -308,12 +308,27 @@ export const getEmailConfigStatus = (): {
   serviceId: boolean;
   templateId: boolean;
   publicKey: boolean;
+  mode: 'production' | 'simulation';
+  details: {
+    serviceId: string;
+    templateId: string;
+    publicKeyPrefix: string;
+  };
 } => {
+  const isConfigured = isEmailConfigured();
   return {
-    configured: isEmailConfigured(),
+    configured: isConfigured,
     serviceId: Boolean(EMAIL_CONFIG.serviceId),
     templateId: Boolean(EMAIL_CONFIG.templateId),
     publicKey: Boolean(EMAIL_CONFIG.publicKey),
+    mode: isConfigured ? 'production' : 'simulation',
+    details: {
+      serviceId: EMAIL_CONFIG.serviceId,
+      templateId: EMAIL_CONFIG.templateId,
+      publicKeyPrefix: EMAIL_CONFIG.publicKey 
+        ? `${EMAIL_CONFIG.publicKey.substring(0, 8)}...` 
+        : '(not set)',
+    },
   };
 };
 

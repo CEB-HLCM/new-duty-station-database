@@ -254,13 +254,38 @@ VITE_EMAILJS_TEMPLATE_ID=your_template_id
 
 **Setup Instructions:**
 
-1. **Create EmailJS Account**: Sign up at [EmailJS](https://www.emailjs.com/)
-2. **Create Email Service**: Add your email service (Gmail, Outlook, etc.)
-3. **Create Email Template**: Use the template ID from your EmailJS dashboard
-4. **Get Public Key**: Find your public key in EmailJS account settings
-5. **Set Environment Variables**: Create `.env.local` in project root with the values above
+1. **Create EmailJS Account**: Sign up at [EmailJS](https://www.emailjs.com/) (free tier available)
+2. **Create Email Service**: 
+   - In EmailJS dashboard → "Email Services" → "Add New Service"
+   - Choose provider (Gmail, Outlook, etc.) and authenticate
+   - Save the Service ID (e.g., `service_abc123xyz`)
+3. **Create Email Template**:
+   - In EmailJS dashboard → "Email Templates" → "Create New Template"
+   - **Subject:** `UN Duty Station Request: {{request_type}}`
+   - **Body:** Use template variables: `{{request_type}}`, `{{from_name}}`, `{{organization}}`, `{{request_details}}`, `{{request_date}}`, `{{request_count}}`, `{{request_summary}}`
+   - Save the Template ID (e.g., `template_xyz789abc`)
+4. **Get Public Key**: 
+   - In EmailJS dashboard → "Account" → "General" → Copy Public Key
+5. **Set Environment Variables**: 
+   - Create `.env.local` in project root with your credentials:
+   ```env
+   VITE_EMAILJS_PUBLIC_KEY=your_public_key
+   VITE_EMAILJS_SERVICE_ID=your_service_id
+   VITE_EMAILJS_TEMPLATE_ID=your_template_id
+   ```
+   - Restart dev server after creating `.env.local`
 
-**Note**: The application will work in simulation mode if EmailJS is not configured. Requests will be saved to history but no actual emails will be sent. The UI will display a warning when EmailJS is not configured.
+**Note**: The application works in simulation mode if EmailJS is not configured. Requests are saved to history but no emails are sent. A yellow warning banner appears when EmailJS is not configured.
+
+**For Production (Netlify):** 
+- Go to Netlify dashboard → Site settings → Environment variables
+- Add each variable: `VITE_EMAILJS_PUBLIC_KEY`, `VITE_EMAILJS_SERVICE_ID`, `VITE_EMAILJS_TEMPLATE_ID`
+- Redeploy site for changes to take effect
+
+**Verification:**
+- ✅ No warning banner on `/add` page = EmailJS configured
+- ✅ Confirmation IDs start with `EMAIL-` or `BATCH-` (not `SIM-`) = Real emails sending
+- ✅ Check EmailJS dashboard → "Logs" for email send status
 
 ## 📋 Development Roadmap
 
