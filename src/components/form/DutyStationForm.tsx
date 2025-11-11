@@ -1,5 +1,4 @@
-// Duty Station Request Form Component
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import {
   Box,
   Card,
@@ -17,10 +16,14 @@ import {
   Chip,
   IconButton,
   Tooltip,
+  Autocomplete,
+  CircularProgress,
+  InputAdornment,
 } from '@mui/material';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import RefreshIcon from '@mui/icons-material/Refresh';
+import SearchIcon from '@mui/icons-material/Search';
 import type { DutyStationRequest } from '../../schemas/dutyStationSchema';
 import {
   RequestType,
@@ -34,6 +37,9 @@ import { FormMapPicker } from './FormMapPicker';
 import { EnhancedCitySearch } from './EnhancedCitySearch';
 import { CountrySelector } from './CountrySelector';
 import { getUserPreferences, saveUserPreferences } from '../../services/userPreferencesService';
+import { useAppData } from '../../hooks/useAppData';
+import { searchDutyStations } from '../../services/searchService';
+import type { SearchFilters } from '../../types/dutyStation';
 import type { DutyStation } from '../../types/dutyStation';
 import type { RequestType as RequestTypeValue } from '../../types/request';
 import type { Country } from '../../types/dutyStation';
@@ -66,6 +72,95 @@ export const DutyStationForm: React.FC<DutyStationFormProps> = ({
   // Track original auto-populated coordinates
   const [originalCoordinates, setOriginalCoordinates] = useState<{ latitude: number; longitude: number } | null>(null);
   const [coordinatesManuallyChanged, setCoordinatesManuallyChanged] = useState(false);
+  // For UPDATE/REMOVE/COORDINATE_UPDATE: selected station
+  const [selectedStation, setSelectedStation] = useState<DutyStation | null>(existingStation || null);
+  const [stationSearchQuery, setStationSearchQuery] = useState('');
+  
+  // Get duty stations data for search
+  const { dutyStations, loading: stationsLoading } = useAppData();
+  
+  // Search stations when query changes (for UPDATE/REMOVE/COORDINATE_UPDATE)
+  const stationSearchResults = useMemo(() => {
+    if (!stationSearchQuery || stationSearchQuery.length < 2) return [];
+    
+    const filters: SearchFilters = {
+      query: stationSearchQuery,
+      searchType: 'partial',
+      fields: ['NAME', 'DS', 'COMMONNAME'],
+      countryFilter: '',
+      showObsolete: true,
+    };
+    
+    return searchDutyStations(dutyStations, filters)
+      .slice(0, 10)
+      .map(result => result.item);
+  }, [stationSearchQuery, dutyStations]);
+  
+  // Handle station selection for UPDATE/REMOVE/COORDINATE_UPDATE
+  const handleStationSelect = (station: DutyStation | null) => {
+    setSelectedStation(station);
+    
+    if (station) {
+      // Populate form fields based on request type
+      if (requestType === RequestType.UPDATE) {
+        form.setValue('dutyStationCode' as any, station.DS);
+        form.setValue('countryCode' as any, station.CTY);
+        form.setValue('stationName' as any, station.NAME);
+        form.setValue('currentData' as any, {
+          name: station.NAME,
+          country: station.COUNTRY || '',
+          commonName: station.COMMONNAME || '',
+          coordinates: {
+            latitude: station.LATITUDE,
+            longitude: station.LONGITUDE,
+          },
+        });
+        // Set current coordinates for map display
+        form.setValue('currentCoordinates' as any, {
+          latitude: station.LATITUDE,
+          longitude: station.LONGITUDE,
+        });
+      } else if (requestType === RequestType.REMOVE) {
+        form.setValue('dutyStationCode' as any, station.DS);
+        form.setValue('countryCode' as any, station.CTY);
+        form.setValue('currentData' as any, {
+          name: station.NAME,
+          country: station.COUNTRY || '',
+          commonName: station.COMMONNAME || '',
+        });
+      } else if (requestType === RequestType.COORDINATE_UPDATE) {
+        form.setValue('dutyStationCode' as any, station.DS);
+        form.setValue('countryCode' as any, station.CTY);
+        form.setValue('stationName' as any, station.NAME);
+        form.setValue('currentCoordinates' as any, {
+          latitude: station.LATITUDE,
+          longitude: station.LONGITUDE,
+        });
+        // Initialize proposed coordinates with current ones
+        form.setValue('proposedCoordinates' as any, {
+          latitude: station.LATITUDE,
+          longitude: station.LONGITUDE,
+        });
+        setShowMap(true);
+      }
+    } else {
+      // Clear form fields when station is deselected
+      if (requestType === RequestType.UPDATE) {
+        form.setValue('dutyStationCode' as any, '');
+        form.setValue('countryCode' as any, '');
+        form.setValue('currentData' as any, undefined);
+      } else if (requestType === RequestType.REMOVE) {
+        form.setValue('dutyStationCode' as any, '');
+        form.setValue('countryCode' as any, '');
+        form.setValue('currentData' as any, undefined);
+      } else if (requestType === RequestType.COORDINATE_UPDATE) {
+        form.setValue('dutyStationCode' as any, '');
+        form.setValue('countryCode' as any, '');
+        form.setValue('currentCoordinates' as any, { latitude: 0, longitude: 0 });
+        form.setValue('proposedCoordinates' as any, { latitude: 0, longitude: 0 });
+      }
+    }
+  };
 
   // Determine validation schema based on request type
   const getSchema = () => {
@@ -80,16 +175,6 @@ export const DutyStationForm: React.FC<DutyStationFormProps> = ({
         return addDutyStationSchema;
     }
   };
-
-  // Load user preferences on mount
-  useEffect(() => {
-    const userPrefs = getUserPreferences();
-    if (userPrefs && !initialData) {
-      form.setValue('submittedBy', userPrefs.email);
-      form.setValue('organization', userPrefs.organization);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   const form = useForm<Partial<DutyStationRequest>>({
     resolver: zodResolver(getSchema()) as any,
@@ -149,17 +234,53 @@ export const DutyStationForm: React.FC<DutyStationFormProps> = ({
     enabled: true,
   });
 
+  // Update requestType in form when it changes (ensures it's always in form state)
+  useEffect(() => {
+    form.setValue('requestType' as any, requestType);
+  }, [requestType, form]);
+
+  // Load user preferences on mount
+  useEffect(() => {
+    const userPrefs = getUserPreferences();
+    if (userPrefs && !initialData) {
+      form.setValue('submittedBy', userPrefs.email);
+      form.setValue('organization', userPrefs.organization);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const handleRequestTypeChange = (newType: RequestTypeValue) => {
     setRequestType(newType);
-    form.reset();
+    // Reset form with new request type
+    form.reset({
+      requestType: newType,
+      submittedBy: form.getValues('submittedBy') || getUserPreferences()?.email || '',
+      organization: form.getValues('organization') || getUserPreferences()?.organization || '',
+      justification: '',
+      // Clear all type-specific fields
+      name: '',
+      country: '',
+      countryCode: '',
+      commonName: '',
+      coordinates: { latitude: 0, longitude: 0 },
+      dutyStationCode: '',
+      stationName: '',
+      currentCoordinates: { latitude: 0, longitude: 0 },
+      currentData: undefined,
+      proposedChanges: { name: '', commonName: '', coordinates: { latitude: 0, longitude: 0 } },
+      proposedCoordinates: { latitude: 0, longitude: 0 },
+    } as Partial<DutyStationRequest>);
     clearPersistedData();
     setSelectedCountry(null);
     setSelectedRegion(null);
     setCityValidated(false);
-    setShowMap(false); // Hide map when request type changes
+    setShowMap(false);
     // Reset coordinate tracking when request type changes
     setOriginalCoordinates(null);
     setCoordinatesManuallyChanged(false);
+    // Reset station selection when request type changes
+    setSelectedStation(null);
+    setStationSearchQuery('');
   };
 
   const handleCountrySelect = (country: Country | null) => {
@@ -211,13 +332,21 @@ export const DutyStationForm: React.FC<DutyStationFormProps> = ({
     (data) => {
       // Success: validation passed
       console.log('Form validation passed, submitting request:', data);
-      onSubmit(data as DutyStationRequest);
+      // Ensure requestType is set correctly
+      const requestData = {
+        ...data,
+        requestType: requestType,
+      } as DutyStationRequest;
+      onSubmit(requestData);
       form.reset();
       clearPersistedData();
       setSelectedCountry(null);
       setSelectedRegion(null);
       setCityValidated(false);
       setShowMap(false);
+      // Reset station selection
+      setSelectedStation(null);
+      setStationSearchQuery('');
     },
     (errors) => {
       // Error: validation failed
@@ -299,19 +428,31 @@ export const DutyStationForm: React.FC<DutyStationFormProps> = ({
           {/* Request Type Selection */}
           <Grid container spacing={3}>
             <Grid size={{ xs: 12 }}>
-              <FormControl fullWidth>
-                <InputLabel>Request Type</InputLabel>
-                <Select
-                  value={requestType}
-                  label="Request Type"
-                  onChange={(e) => handleRequestTypeChange(e.target.value as RequestTypeValue)}
-                >
-                  <MenuItem value={RequestType.ADD}>Add New Duty Station</MenuItem>
-                  <MenuItem value={RequestType.UPDATE}>Update Existing Duty Station</MenuItem>
-                  <MenuItem value={RequestType.REMOVE}>Remove/Obsolete Duty Station</MenuItem>
-                  <MenuItem value={RequestType.COORDINATE_UPDATE}>Update Coordinates Only</MenuItem>
-                </Select>
-              </FormControl>
+              <Controller
+                name="requestType"
+                control={form.control}
+                defaultValue={requestType}
+                render={({ field }) => (
+                  <FormControl fullWidth>
+                    <InputLabel>Request Type</InputLabel>
+                    <Select
+                      {...field}
+                      value={field.value || requestType}
+                      label="Request Type"
+                      onChange={(e) => {
+                        const newType = e.target.value as RequestTypeValue;
+                        field.onChange(newType);
+                        handleRequestTypeChange(newType);
+                      }}
+                    >
+                      <MenuItem value={RequestType.ADD}>Add New Duty Station</MenuItem>
+                      <MenuItem value={RequestType.UPDATE}>Update Existing Duty Station</MenuItem>
+                      <MenuItem value={RequestType.REMOVE}>Remove/Obsolete Duty Station</MenuItem>
+                      <MenuItem value={RequestType.COORDINATE_UPDATE}>Update Coordinates Only</MenuItem>
+                    </Select>
+                  </FormControl>
+                )}
+              />
             </Grid>
 
             <Grid size={{ xs: 12 }}>
@@ -563,147 +704,442 @@ export const DutyStationForm: React.FC<DutyStationFormProps> = ({
               </>
             )}
 
-            {requestType === RequestType.UPDATE && existingStation && (
+            {requestType === RequestType.UPDATE && (
               <>
+                {/* Step 1: Select Duty Station to Update */}
                 <Grid size={{ xs: 12 }}>
-                  <Alert severity="info">
-                    Updating: <strong>{existingStation.NAME}</strong> ({existingStation.DS}, {existingStation.COUNTRY})
+                  <Alert severity="info" sx={{ mb: 2 }}>
+                    <Typography variant="subtitle2" gutterBottom>
+                      📍 <strong>Step 1:</strong> Select Duty Station to Update
+                    </Typography>
+                    <Typography variant="caption">
+                      Search for the duty station you want to update by name, code, or common name.
+                    </Typography>
                   </Alert>
-                </Grid>
-
-                <Grid size={{ xs: 12, md: 6 }}>
-                  <Controller
-                    name={"proposedChanges.name" as any}
-                    control={form.control}
-                    defaultValue=""
-                    render={({ field, fieldState }) => (
+                  <Autocomplete
+                    options={stationSearchResults}
+                    getOptionLabel={(option) => 
+                      `${option.NAME} - ${option.COUNTRY || option.CTY} (${option.DS})`
+                    }
+                    value={selectedStation}
+                    onChange={(_, value) => handleStationSelect(value)}
+                    inputValue={stationSearchQuery}
+                    onInputChange={(_, value) => setStationSearchQuery(value)}
+                    loading={stationsLoading}
+                    renderInput={(params) => (
                       <TextField
-                        {...field}
-                        value={field.value || ''}
-                        label="New Name (Optional)"
-                        fullWidth
-                        placeholder={existingStation.NAME}
-                        error={!!fieldState.error}
-                        helperText={fieldState.error?.message || 'Leave blank to keep current'}
+                        {...params}
+                        label="Search Duty Station *"
+                        placeholder="Type station name, code, or common name..."
+                        required
+                        error={!!(form.formState.errors as any).dutyStationCode}
+                        helperText={
+                          (form.formState.errors as any).dutyStationCode?.message ||
+                          (selectedStation ? `Selected: ${selectedStation.NAME} (${selectedStation.DS})` : 'Search and select a duty station')
+                        }
+                        InputProps={{
+                          ...params.InputProps,
+                          startAdornment: (
+                            <InputAdornment position="start">
+                              <SearchIcon />
+                            </InputAdornment>
+                          ),
+                          endAdornment: (
+                            <>
+                              {stationsLoading ? <CircularProgress size={20} /> : null}
+                              {params.InputProps.endAdornment}
+                            </>
+                          ),
+                        }}
                       />
                     )}
+                    renderOption={(props, option) => (
+                      <Box component="li" {...props} key={`${option.DS}-${option.CTY}`}>
+                        <Box>
+                          <Typography variant="body2" fontWeight="medium">
+                            {option.NAME}
+                          </Typography>
+                          <Typography variant="caption" color="text.secondary">
+                            Code: {option.DS} • Country: {option.COUNTRY || option.CTY}
+                            {option.COMMONNAME && ` • Common: ${option.COMMONNAME}`}
+                          </Typography>
+                        </Box>
+                      </Box>
+                    )}
+                    noOptionsText={
+                      stationSearchQuery.length < 2 
+                        ? 'Type at least 2 characters to search'
+                        : 'No duty stations found'
+                    }
                   />
                 </Grid>
 
-                <Grid size={{ xs: 12, md: 6 }}>
-                  <Controller
-                    name={"proposedChanges.commonName" as any}
-                    control={form.control}
-                    defaultValue=""
-                    render={({ field, fieldState }) => (
-                      <TextField
-                        {...field}
-                        value={field.value || ''}
-                        label="New Common Name (Optional)"
-                        fullWidth
-                        placeholder={existingStation.COMMONNAME || 'None'}
-                        error={!!fieldState.error}
-                        helperText={fieldState.error?.message || 'Leave blank to keep current'}
+                {/* Hidden fields for form registration */}
+                <input type="hidden" {...form.register('dutyStationCode' as any)} />
+                <input type="hidden" {...form.register('countryCode' as any)} />
+                <input type="hidden" {...form.register('stationName' as any)} />
+                <input type="hidden" {...form.register('currentData' as any)} />
+                <input type="hidden" {...form.register('currentCoordinates' as any)} />
+
+                {/* Step 2: Update Fields (shown after station selection) */}
+                {selectedStation && (
+                  <>
+                    <Grid size={{ xs: 12 }}>
+                      <Alert severity="success" sx={{ mb: 2 }}>
+                        <Typography variant="subtitle2" gutterBottom>
+                          ✓ <strong>Step 2:</strong> Update Information
+                        </Typography>
+                        <Typography variant="caption">
+                          Current station: <strong>{selectedStation.NAME}</strong> ({selectedStation.DS}, {selectedStation.COUNTRY})
+                        </Typography>
+                      </Alert>
+                    </Grid>
+
+                    <Grid size={{ xs: 12, md: 6 }}>
+                      <Controller
+                        name={"proposedChanges.name" as any}
+                        control={form.control}
+                        defaultValue=""
+                        render={({ field, fieldState }) => (
+                          <TextField
+                            {...field}
+                            value={field.value || ''}
+                            label="New Name (Optional)"
+                            fullWidth
+                            placeholder={selectedStation.NAME}
+                            error={!!fieldState.error}
+                            helperText={fieldState.error?.message || 'Leave blank to keep current'}
+                          />
+                        )}
                       />
+                    </Grid>
+
+                    <Grid size={{ xs: 12, md: 6 }}>
+                      <Controller
+                        name={"proposedChanges.commonName" as any}
+                        control={form.control}
+                        defaultValue=""
+                        render={({ field, fieldState }) => (
+                          <TextField
+                            {...field}
+                            value={field.value || ''}
+                            label="New Common Name (Optional)"
+                            fullWidth
+                            placeholder={selectedStation.COMMONNAME || 'None'}
+                            error={!!fieldState.error}
+                            helperText={fieldState.error?.message || 'Leave blank to keep current'}
+                          />
+                        )}
+                      />
+                    </Grid>
+
+                    {/* Optional: Update Coordinates */}
+                    <Grid size={{ xs: 12 }}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 1 }}>
+                        <Button
+                          variant="outlined"
+                          size="small"
+                          onClick={() => setShowMap(!showMap)}
+                        >
+                          {showMap ? '🔼 Hide Map' : '🔽 Update Coordinates on Map'}
+                        </Button>
+                        <Typography variant="caption" color="text.secondary">
+                          {showMap ? 'Click map to update coordinates if needed' : 'Optional: Update GPS coordinates'}
+                        </Typography>
+                      </Box>
+                    </Grid>
+
+                    {/* Map for coordinate update */}
+                    {showMap && selectedStation && (
+                      <Grid size={{ xs: 12 }}>
+                        <Box sx={{ height: 400, border: 1, borderColor: 'divider', borderRadius: 1, overflow: 'hidden', mt: 2 }}>
+                          <FormMapPicker
+                            onLocationSelect={(lat, lng) => {
+                              form.setValue('proposedChanges.coordinates.latitude' as any, lat);
+                              form.setValue('proposedChanges.coordinates.longitude' as any, lng);
+                              setShowMap(false);
+                            }}
+                            initialCenter={{
+                              latitude: selectedStation.LATITUDE,
+                              longitude: selectedStation.LONGITUDE,
+                            }}
+                          />
+                        </Box>
+                      </Grid>
                     )}
-                  />
-                </Grid>
+                  </>
+                )}
               </>
             )}
 
-            {requestType === RequestType.REMOVE && existingStation && (
-              <Grid size={{ xs: 12 }}>
-                <Alert severity="warning">
-                  Requesting to mark as obsolete: <strong>{existingStation.NAME}</strong> ({existingStation.DS}, {existingStation.COUNTRY})
-                </Alert>
-              </Grid>
-            )}
-
-            {requestType === RequestType.COORDINATE_UPDATE && existingStation && (
+            {requestType === RequestType.REMOVE && (
               <>
+                {/* Step 1: Select Duty Station to Remove */}
                 <Grid size={{ xs: 12 }}>
-                  <Alert severity="info">
-                    Current coordinates for <strong>{existingStation.NAME}</strong>: {existingStation.LATITUDE.toFixed(6)}, {existingStation.LONGITUDE.toFixed(6)}
+                  <Alert severity="warning" sx={{ mb: 2 }}>
+                    <Typography variant="subtitle2" gutterBottom>
+                      ⚠️ <strong>Step 1:</strong> Select Duty Station to Remove/Obsolete
+                    </Typography>
+                    <Typography variant="caption">
+                      Search for the duty station you want to mark as obsolete.
+                    </Typography>
                   </Alert>
+                  <Autocomplete
+                    options={stationSearchResults}
+                    getOptionLabel={(option) => 
+                      `${option.NAME} - ${option.COUNTRY || option.CTY} (${option.DS})`
+                    }
+                    value={selectedStation}
+                    onChange={(_, value) => handleStationSelect(value)}
+                    inputValue={stationSearchQuery}
+                    onInputChange={(_, value) => setStationSearchQuery(value)}
+                    loading={stationsLoading}
+                    renderInput={(params) => (
+                      <TextField
+                        {...params}
+                        label="Search Duty Station *"
+                        placeholder="Type station name, code, or common name..."
+                        required
+                        error={!!(form.formState.errors as any).dutyStationCode}
+                        helperText={
+                          (form.formState.errors as any).dutyStationCode?.message ||
+                          (selectedStation ? `Selected: ${selectedStation.NAME} (${selectedStation.DS})` : 'Search and select a duty station')
+                        }
+                        InputProps={{
+                          ...params.InputProps,
+                          startAdornment: (
+                            <InputAdornment position="start">
+                              <SearchIcon />
+                            </InputAdornment>
+                          ),
+                          endAdornment: (
+                            <>
+                              {stationsLoading ? <CircularProgress size={20} /> : null}
+                              {params.InputProps.endAdornment}
+                            </>
+                          ),
+                        }}
+                      />
+                    )}
+                    renderOption={(props, option) => (
+                      <Box component="li" {...props} key={`${option.DS}-${option.CTY}`}>
+                        <Box>
+                          <Typography variant="body2" fontWeight="medium">
+                            {option.NAME}
+                          </Typography>
+                          <Typography variant="caption" color="text.secondary">
+                            Code: {option.DS} • Country: {option.COUNTRY || option.CTY}
+                            {option.COMMONNAME && ` • Common: ${option.COMMONNAME}`}
+                          </Typography>
+                        </Box>
+                      </Box>
+                    )}
+                    noOptionsText={
+                      stationSearchQuery.length < 2 
+                        ? 'Type at least 2 characters to search'
+                        : 'No duty stations found'
+                    }
+                  />
                 </Grid>
 
-                <Grid size={{ xs: 12 }}>
-                  <Typography variant="subtitle1" gutterBottom>
-                    Proposed New Coordinates
-                  </Typography>
-                  <Grid container spacing={2}>
-                    <Grid size={{ xs: 12, sm: 6 }}>
-                      <Controller
-                        name={"proposedCoordinates.latitude" as any}
-                        control={form.control}
-                        defaultValue={0}
-                        render={({ field, fieldState }) => (
-                          <TextField
-                            {...field}
-                            value={field.value ?? 0}
-                            label="New Latitude"
-                            type="number"
-                            fullWidth
-                            required
-                            inputProps={{ step: 0.000001, min: -90, max: 90 }}
-                            error={!!fieldState.error}
-                            helperText={fieldState.error?.message}
-                          />
-                        )}
-                      />
-                    </Grid>
-                    <Grid size={{ xs: 12, sm: 6 }}>
-                      <Controller
-                        name={"proposedCoordinates.longitude" as any}
-                        control={form.control}
-                        defaultValue={0}
-                        render={({ field, fieldState }) => (
-                          <TextField
-                            {...field}
-                            value={field.value ?? 0}
-                            label="New Longitude"
-                            type="number"
-                            fullWidth
-                            required
-                            inputProps={{ step: 0.000001, min: -180, max: 180 }}
-                            error={!!fieldState.error}
-                            helperText={fieldState.error?.message}
-                          />
-                        )}
-                      />
-                    </Grid>
+                {/* Hidden fields */}
+                <input type="hidden" {...form.register('dutyStationCode' as any)} />
+                <input type="hidden" {...form.register('countryCode' as any)} />
+                <input type="hidden" {...form.register('currentData' as any)} />
+
+                {/* Confirmation when station selected */}
+                {selectedStation && (
+                  <Grid size={{ xs: 12 }}>
+                    <Alert severity="warning">
+                      Requesting to mark as obsolete: <strong>{selectedStation.NAME}</strong> ({selectedStation.DS}, {selectedStation.COUNTRY})
+                    </Alert>
                   </Grid>
-                  <Button
-                    variant="outlined"
-                    onClick={() => setShowMap(!showMap)}
-                    sx={{ mt: 1 }}
-                  >
-                    {showMap ? 'Hide Map' : 'Pick New Coordinates on Map'}
-                  </Button>
-                </Grid>
+                )}
               </>
             )}
 
-            {/* Coordinate Picker Map */}
-            {showMap && (
+            {requestType === RequestType.COORDINATE_UPDATE && (
+              <>
+                {/* Step 1: Select Duty Station */}
+                <Grid size={{ xs: 12 }}>
+                  <Alert severity="info" sx={{ mb: 2 }}>
+                    <Typography variant="subtitle2" gutterBottom>
+                      📍 <strong>Step 1:</strong> Select Duty Station
+                    </Typography>
+                    <Typography variant="caption">
+                      Search for the duty station whose coordinates you want to update.
+                    </Typography>
+                  </Alert>
+                  <Autocomplete
+                    options={stationSearchResults}
+                    getOptionLabel={(option) => 
+                      `${option.NAME} - ${option.COUNTRY || option.CTY} (${option.DS})`
+                    }
+                    value={selectedStation}
+                    onChange={(_, value) => handleStationSelect(value)}
+                    inputValue={stationSearchQuery}
+                    onInputChange={(_, value) => setStationSearchQuery(value)}
+                    loading={stationsLoading}
+                    renderInput={(params) => (
+                      <TextField
+                        {...params}
+                        label="Search Duty Station *"
+                        placeholder="Type station name, code, or common name..."
+                        required
+                        error={!!(form.formState.errors as any).dutyStationCode}
+                        helperText={
+                          (form.formState.errors as any).dutyStationCode?.message ||
+                          (selectedStation ? `Selected: ${selectedStation.NAME} (${selectedStation.DS})` : 'Search and select a duty station')
+                        }
+                        InputProps={{
+                          ...params.InputProps,
+                          startAdornment: (
+                            <InputAdornment position="start">
+                              <SearchIcon />
+                            </InputAdornment>
+                          ),
+                          endAdornment: (
+                            <>
+                              {stationsLoading ? <CircularProgress size={20} /> : null}
+                              {params.InputProps.endAdornment}
+                            </>
+                          ),
+                        }}
+                      />
+                    )}
+                    renderOption={(props, option) => (
+                      <Box component="li" {...props} key={`${option.DS}-${option.CTY}`}>
+                        <Box>
+                          <Typography variant="body2" fontWeight="medium">
+                            {option.NAME}
+                          </Typography>
+                          <Typography variant="caption" color="text.secondary">
+                            Code: {option.DS} • Country: {option.COUNTRY || option.CTY}
+                            {option.COMMONNAME && ` • Common: ${option.COMMONNAME}`}
+                          </Typography>
+                        </Box>
+                      </Box>
+                    )}
+                    noOptionsText={
+                      stationSearchQuery.length < 2 
+                        ? 'Type at least 2 characters to search'
+                        : 'No duty stations found'
+                    }
+                  />
+                </Grid>
+
+                {/* Hidden fields */}
+                <input type="hidden" {...form.register('dutyStationCode' as any)} />
+                <input type="hidden" {...form.register('countryCode' as any)} />
+                <input type="hidden" {...form.register('stationName' as any)} />
+                <input type="hidden" {...form.register('currentCoordinates' as any)} />
+                <input type="hidden" {...form.register('proposedCoordinates' as any)} />
+
+                {/* Step 2: Update Coordinates (shown after station selection) */}
+                {selectedStation && (
+                  <>
+                    <Grid size={{ xs: 12 }}>
+                      <Alert severity="info" sx={{ mb: 2 }}>
+                        Current coordinates for <strong>{selectedStation.NAME}</strong>: {selectedStation.LATITUDE.toFixed(6)}, {selectedStation.LONGITUDE.toFixed(6)}
+                      </Alert>
+                    </Grid>
+
+                    <Grid size={{ xs: 12 }}>
+                      <Typography variant="subtitle1" gutterBottom>
+                        Proposed New Coordinates
+                      </Typography>
+                      <Grid container spacing={2}>
+                        <Grid size={{ xs: 12, sm: 6 }}>
+                          <Controller
+                            name={"proposedCoordinates.latitude" as any}
+                            control={form.control}
+                            defaultValue={selectedStation.LATITUDE}
+                            render={({ field, fieldState }) => (
+                              <TextField
+                                {...field}
+                                value={field.value ?? selectedStation.LATITUDE}
+                                label="New Latitude"
+                                type="number"
+                                fullWidth
+                                required
+                                inputProps={{ step: 0.000001, min: -90, max: 90 }}
+                                error={!!fieldState.error}
+                                helperText={fieldState.error?.message}
+                              />
+                            )}
+                          />
+                        </Grid>
+                        <Grid size={{ xs: 12, sm: 6 }}>
+                          <Controller
+                            name={"proposedCoordinates.longitude" as any}
+                            control={form.control}
+                            defaultValue={selectedStation.LONGITUDE}
+                            render={({ field, fieldState }) => (
+                              <TextField
+                                {...field}
+                                value={field.value ?? selectedStation.LONGITUDE}
+                                label="New Longitude"
+                                type="number"
+                                fullWidth
+                                required
+                                inputProps={{ step: 0.000001, min: -180, max: 180 }}
+                                error={!!fieldState.error}
+                                helperText={fieldState.error?.message}
+                              />
+                            )}
+                          />
+                        </Grid>
+                      </Grid>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 1 }}>
+                        <Button
+                          variant="outlined"
+                          onClick={() => setShowMap(!showMap)}
+                        >
+                          {showMap ? '🔼 Hide Map' : '🔽 Pick New Coordinates on Map'}
+                        </Button>
+                        <Typography variant="caption" color="text.secondary">
+                          {showMap ? 'Click map to select new coordinates' : 'Use map to visually select new coordinates'}
+                        </Typography>
+                      </Box>
+                    </Grid>
+                  </>
+                )}
+              </>
+            )}
+
+            {/* Coordinate Picker Map - Only for ADD and COORDINATE_UPDATE (when not already shown) */}
+            {showMap && requestType === RequestType.ADD && (
               <Grid size={{ xs: 12 }}>
                 <Box sx={{ height: 400, border: 1, borderColor: 'divider', borderRadius: 1, overflow: 'hidden' }}>
                   <FormMapPicker
                     onLocationSelect={handleCoordinateSelect}
                     initialCenter={
-                      existingStation
+                      form.watch('coordinates.latitude') !== 0 && form.watch('coordinates.longitude') !== 0
                         ? {
-                            latitude: existingStation.LATITUDE,
-                            longitude: existingStation.LONGITUDE,
+                            latitude: form.watch('coordinates.latitude'),
+                            longitude: form.watch('coordinates.longitude'),
                           }
-                        : // Use current form coordinates if city was selected
-                          form.watch('coordinates.latitude') !== 0 && form.watch('coordinates.longitude') !== 0
-                          ? {
-                              latitude: form.watch('coordinates.latitude'),
-                              longitude: form.watch('coordinates.longitude'),
-                            }
-                          : { latitude: 20, longitude: 0 } // Default only if no coordinates yet
+                        : { latitude: 20, longitude: 0 }
                     }
+                  />
+                </Box>
+              </Grid>
+            )}
+
+            {/* Map for COORDINATE_UPDATE (shown separately) */}
+            {showMap && requestType === RequestType.COORDINATE_UPDATE && selectedStation && (
+              <Grid size={{ xs: 12 }}>
+                <Box sx={{ height: 400, border: 1, borderColor: 'divider', borderRadius: 1, overflow: 'hidden', mt: 2 }}>
+                  <FormMapPicker
+                    onLocationSelect={(lat, lng) => {
+                      form.setValue('proposedCoordinates.latitude' as any, lat);
+                      form.setValue('proposedCoordinates.longitude' as any, lng);
+                      setShowMap(false);
+                    }}
+                    initialCenter={{
+                      latitude: selectedStation.LATITUDE,
+                      longitude: selectedStation.LONGITUDE,
+                    }}
                   />
                 </Box>
               </Grid>

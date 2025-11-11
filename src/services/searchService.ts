@@ -209,6 +209,9 @@ export function searchDutyStations(
 ): SearchResult<DutyStation>[] {
   const { query, searchType, fields, countryFilter, showObsolete } = filters;
   
+  // Safety check: ensure query is a string
+  const searchQuery = query || '';
+  
   // Filter data based on additional filters
   let filteredData = [...data];
   
@@ -224,7 +227,7 @@ export function searchDutyStations(
     filteredData = filteredData.filter(station => station.OBSOLETE !== '1');
   }
   
-  if (!query.trim()) {
+  if (!searchQuery.trim()) {
     return filteredData.map(item => ({ item }));
   }
   
@@ -239,20 +242,20 @@ export function searchDutyStations(
   
   switch (searchType) {
     case 'exact':
-      results = exactSearch(filteredData, query, searchFields);
+      results = exactSearch(filteredData, searchQuery, searchFields);
       break;
     case 'partial':
-      results = partialSearch(filteredData, query, searchFields);
+      results = partialSearch(filteredData, searchQuery, searchFields);
       break;
     case 'fuzzy':
-      results = fuzzySearch(filteredData, query, 0.3);
+      results = fuzzySearch(filteredData, searchQuery, 0.3);
       break;
     case 'soundex':
-      results = soundexSearch(filteredData, query, searchFields);
+      results = soundexSearch(filteredData, searchQuery, searchFields);
       break;
     default:
       // Default to partial search
-      results = partialSearch(filteredData, query, searchFields);
+      results = partialSearch(filteredData, searchQuery, searchFields);
   }
   
   return results;
