@@ -20,7 +20,7 @@ import { initializeEmailJS, getEmailConfigStatus } from '../services/emailServic
 export interface UseBasketReturn {
   basket: BasketItem[];
   stats: BasketStats;
-  addToBasket: (request: DutyStationRequest) => void;
+  addToBasket: (request: DutyStationRequest) => Promise<void>;
   removeFromBasket: (itemId: string) => void;
   updateBasketItem: (itemId: string, updates: Partial<BasketItem>) => void;
   reorderBasket: (itemId: string, newPriority: number) => void;
@@ -59,8 +59,8 @@ export const useBasket = (): UseBasketReturn => {
   /**
    * Add request to basket
    */
-  const addToBasket = useCallback((request: DutyStationRequest) => {
-    const newItem = addToBasketService(request);
+  const addToBasket = useCallback(async (request: DutyStationRequest) => {
+    const newItem = await addToBasketService(request);
     setBasket(prev => [...prev, newItem]);
   }, []);
 

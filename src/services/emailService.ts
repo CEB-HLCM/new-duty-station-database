@@ -195,13 +195,12 @@ const generateBatchSummary = (items: BasketItem[]): string => {
  */
 export const sendSingleRequest = async (
   item: BasketItem
-): Promise<{ success: boolean; confirmationId?: string; error?: string }> => {
+): Promise<{ success: boolean; error?: string }> => {
   // If no public key configured, simulate email sending
   if (!EMAIL_CONFIG.publicKey) {
     console.log('[EmailJS Simulation] Would send email:', item);
     return {
       success: true,
-      confirmationId: `SIM-${Date.now().toString(36).toUpperCase()}`,
     };
   }
 
@@ -225,7 +224,6 @@ export const sendSingleRequest = async (
     if (response.status === 200) {
       return {
         success: true,
-        confirmationId: `EMAIL-${Date.now().toString(36).toUpperCase()}`,
       };
     } else {
       return {
@@ -325,7 +323,6 @@ export const sendBatchRequests = async (
     return {
       success: true,
       submittedAt: new Date(),
-      confirmationId: `BATCH-SIM-${Date.now().toString(36).toUpperCase()}`,
     };
   }
 
@@ -362,11 +359,9 @@ export const sendBatchRequests = async (
     }
 
     if (allSuccessful) {
-      const confirmationId = `BATCH-${Date.now().toString(36).toUpperCase()}${totalBatches > 1 ? `-${totalBatches}emails` : ''}`;
       return {
         success: true,
         submittedAt: new Date(),
-        confirmationId,
       };
     } else {
       return {

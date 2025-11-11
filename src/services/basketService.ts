@@ -2,6 +2,8 @@
 import type { BasketItem, DutyStationRequest, SubmissionResult } from '../schemas/dutyStationSchema';
 import type { BasketStats, RequestHistoryEntry } from '../types/request';
 import { sendBatchRequests, isEmailConfigured } from './emailService';
+import { generateDutyStationCode } from '../utils/codeGenerator';
+import { fetchDutyStations } from './dataService';
 
 const BASKET_STORAGE_KEY = 'un_duty_station_basket';
 const HISTORY_STORAGE_KEY = 'un_duty_station_history';
@@ -50,9 +52,34 @@ export const saveBasket = (basket: BasketItem[]): void => {
 
 /**
  * Add request to basket
+ * Generates Duty Station Code for ADD requests if not provided
  */
-export const addToBasket = (request: DutyStationRequest): BasketItem => {
+export const addToBasket = async (request: DutyStationRequest): Promise<BasketItem> => {
   const basket = loadBasket();
+  
+  // Generate code for ADD requests if not provided
+  if (request.requestType === 'add' && !request.proposedCode) {
+    try {
+      // Get existing stations and requests to check for uniqueness
+      const existingStations = await fetchDutyStations();
+      const existingRequests = basket
+        .map(item => item.request)
+        .filter(req => req.requestType === 'add');
+      
+      // Generate unique code
+      const generatedCode = generateDutyStationCode(
+        request.name,
+        existingStations,
+        existingRequests
+      );
+      
+      // Add generated code to request
+      request.proposedCode = generatedCode;
+    } catch (error) {
+      console.error('Error generating duty station code:', error);
+      // Continue without code - user can add manually later
+    }
+  }
   
   const newItem: BasketItem = {
     id: generateId(),
@@ -226,13 +253,6 @@ export const submitBasket = async (items: BasketItem[]): Promise<SubmissionResul
       return emailResult;
     }
 
-    const confirmationId = emailResult.confirmationId || `CONF-${generateId().toUpperCase()}`;
-    
-    // Add all items to history
-    items.forEach(item => {
-      addToHistory(item, confirmationId);
-    });
-
     // Remove submitted items from basket
     const currentBasket = loadBasket();
     const itemIds = items.map(i => i.id);
@@ -242,7 +262,6 @@ export const submitBasket = async (items: BasketItem[]): Promise<SubmissionResul
     return {
       success: true,
       submittedAt: new Date(),
-      confirmationId,
     };
   } catch (error) {
     console.error('Error submitting basket:', error);

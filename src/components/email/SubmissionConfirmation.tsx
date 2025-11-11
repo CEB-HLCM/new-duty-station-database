@@ -19,12 +19,8 @@ import {
 import {
   CheckCircle as CheckCircleIcon,
   Error as ErrorIcon,
-  ContentCopy as CopyIcon,
-  Email as EmailIcon,
-  Schedule as ScheduleIcon,
   Assignment as AssignmentIcon,
 } from '@mui/icons-material';
-import { useState } from 'react';
 import type { SubmissionResult } from '../../schemas/dutyStationSchema';
 
 export interface SubmissionConfirmationProps {
@@ -44,17 +40,7 @@ export const SubmissionConfirmation: React.FC<SubmissionConfirmationProps> = ({
   result,
   requestCount = 0,
 }) => {
-  const [copied, setCopied] = useState(false);
-
   if (!result) return null;
-
-  const handleCopyConfirmationId = () => {
-    if (result.confirmationId) {
-      navigator.clipboard.writeText(result.confirmationId);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    }
-  };
 
   return (
     <Dialog
@@ -106,33 +92,6 @@ export const SubmissionConfirmation: React.FC<SubmissionConfirmationProps> = ({
                     : 'rgba(76, 175, 80, 0.08)',
               }}
             >
-              <Typography variant="subtitle2" gutterBottom color="text.secondary">
-                Confirmation ID
-              </Typography>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
-                <Typography
-                  variant="h6"
-                  sx={{
-                    fontFamily: 'monospace',
-                    color: 'success.main',
-                    letterSpacing: 1,
-                  }}
-                >
-                  {result.confirmationId}
-                </Typography>
-                <Button
-                  size="small"
-                  startIcon={<CopyIcon />}
-                  onClick={handleCopyConfirmationId}
-                  variant="outlined"
-                  color={copied ? 'success' : 'primary'}
-                >
-                  {copied ? 'Copied!' : 'Copy'}
-                </Button>
-              </Box>
-
-              <Divider sx={{ my: 2 }} />
-
               <List dense>
                 <ListItem>
                   <ListItemIcon sx={{ minWidth: 40 }}>
@@ -141,26 +100,6 @@ export const SubmissionConfirmation: React.FC<SubmissionConfirmationProps> = ({
                   <ListItemText
                     primary="Requests Submitted"
                     secondary={`${requestCount} request${requestCount > 1 ? 's' : ''}`}
-                  />
-                </ListItem>
-
-                <ListItem>
-                  <ListItemIcon sx={{ minWidth: 40 }}>
-                    <ScheduleIcon color="action" />
-                  </ListItemIcon>
-                  <ListItemText
-                    primary="Submitted On"
-                    secondary={result.submittedAt.toLocaleString()}
-                  />
-                </ListItem>
-
-                <ListItem>
-                  <ListItemIcon sx={{ minWidth: 40 }}>
-                    <EmailIcon color="action" />
-                  </ListItemIcon>
-                  <ListItemText
-                    primary="Notification"
-                    secondary="Email sent to UN CEB Duty Station team"
                   />
                 </ListItem>
               </List>
@@ -175,9 +114,6 @@ export const SubmissionConfirmation: React.FC<SubmissionConfirmationProps> = ({
               </Typography>
               <Typography variant="body2">
                 • You will receive a response via email within 5-10 business days
-              </Typography>
-              <Typography variant="body2">
-                • Keep your confirmation ID for reference
               </Typography>
             </Alert>
           </Box>

@@ -15,12 +15,10 @@ import {
 import {
   Add as AddIcon,
   List as ListIcon,
-  History as HistoryIcon,
   WarningAmber as WarningIcon,
 } from '@mui/icons-material';
 import { DutyStationForm } from '../components/form/DutyStationForm';
 import { RequestBasket } from '../components/basket/RequestBasket';
-import { RequestHistory } from '../components/basket/RequestHistory';
 import { SubmissionConfirmation } from '../components/email/SubmissionConfirmation';
 import { useBasket } from '../hooks/useBasket';
 import type { DutyStationRequest, SubmissionResult } from '../schemas/dutyStationSchema';
@@ -73,14 +71,16 @@ export const DutyStationRequestPage: React.FC = () => {
     isEmailConfigured,
   } = useBasket();
 
-  const handleFormSubmit = (request: DutyStationRequest) => {
+  const handleFormSubmit = async (request: DutyStationRequest) => {
     try {
-      addToBasket(request);
+      await addToBasket(request);
       setSnackbar({
         open: true,
         message: 'Request added to basket successfully!',
         severity: 'success',
       });
+      // Automatically switch to basket tab to show the added request
+      setCurrentTab(1);
     } catch (error) {
       setSnackbar({
         open: true,
@@ -114,11 +114,6 @@ export const DutyStationRequestPage: React.FC = () => {
 
   const handleConfirmationClose = () => {
     setShowConfirmation(false);
-    
-    // If submission was successful, switch to history tab
-    if (submissionResult?.success) {
-      setCurrentTab(2);
-    }
     
     // Clear result after a delay
     setTimeout(() => setSubmissionResult(null), 300);
@@ -213,12 +208,6 @@ export const DutyStationRequestPage: React.FC = () => {
               id="request-tab-1"
               aria-controls="request-tabpanel-1"
             />
-            <Tab
-              icon={<HistoryIcon />}
-              label="History"
-              id="request-tab-2"
-              aria-controls="request-tabpanel-2"
-            />
           </Tabs>
         </Paper>
 
@@ -244,14 +233,6 @@ export const DutyStationRequestPage: React.FC = () => {
                 onClear={handleBasketClear}
                 isSubmitting={isSubmitting}
               />
-            </Grid>
-          </Grid>
-        </TabPanel>
-
-        <TabPanel value={currentTab} index={2}>
-          <Grid container spacing={3}>
-            <Grid size={{ xs: 12 }}>
-              <RequestHistory />
             </Grid>
           </Grid>
         </TabPanel>

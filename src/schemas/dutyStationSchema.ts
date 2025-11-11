@@ -171,7 +171,6 @@ export interface BasketItem {
 export interface SubmissionResult {
   success: boolean;
   submittedAt: Date;
-  confirmationId?: string;
   errors?: string[];
 }
 

@@ -17,6 +17,8 @@ import {
   Alert,
   Divider,
   Paper,
+  Grid,
+  Collapse,
 } from '@mui/material';
 import {
   Delete as DeleteIcon,
@@ -24,6 +26,8 @@ import {
   Send as SendIcon,
   Clear as ClearIcon,
   FileDownload as DownloadIcon,
+  ExpandMore as ExpandMoreIcon,
+  ExpandLess as ExpandLessIcon,
 } from '@mui/icons-material';
 import {
   DndContext,
@@ -44,6 +48,8 @@ import {
 import { CSS } from '@dnd-kit/utilities';
 import type { BasketItem } from '../../schemas/dutyStationSchema';
 import { RequestType } from '../../schemas/dutyStationSchema';
+import { useAppData } from '../../hooks/useAppData';
+import { getRegionFromCountryCode } from '../../utils/codeGenerator';
 
 interface RequestBasketProps {
   basket: BasketItem[];
@@ -69,6 +75,8 @@ const SortableBasketItem: React.FC<{
     transition,
     isDragging,
   } = useSortable({ id: item.id });
+  const { countries } = useAppData();
+  const [expanded, setExpanded] = useState(false);
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -111,17 +119,61 @@ const SortableBasketItem: React.FC<{
     
     switch (request.requestType) {
       case RequestType.ADD:
-        return `${request.name} (${request.country})`;
+        const code = request.proposedCode || 'Pending...';
+        const region = request.countryCode 
+          ? getRegionFromCountryCode(request.countryCode, countries)
+          : undefined;
+        return {
+          code,
+          name: request.name || 'N/A',
+          country: request.country || 'N/A',
+          region: region || 'N/A',
+          coordinates: request.coordinates 
+            ? `${request.coordinates.latitude.toFixed(6)}, ${request.coordinates.longitude.toFixed(6)}`
+            : 'N/A',
+        };
       case RequestType.UPDATE:
-        return `${request.dutyStationCode} - ${request.countryCode}`;
+        return {
+          code: request.dutyStationCode || 'N/A',
+          name: request.stationName || 'N/A',
+          country: request.countryCode || 'N/A',
+          region: request.countryCode 
+            ? getRegionFromCountryCode(request.countryCode, countries)
+            : 'N/A',
+          coordinates: 'N/A',
+        };
       case RequestType.REMOVE:
-        return `${request.dutyStationCode} - ${request.currentData.name}`;
+        return {
+          code: request.dutyStationCode || 'N/A',
+          name: request.currentData?.name || 'N/A',
+          country: request.currentData?.country || 'N/A',
+          region: 'N/A',
+          coordinates: 'N/A',
+        };
       case RequestType.COORDINATE_UPDATE:
-        return `${request.dutyStationCode} - ${request.stationName}`;
+        return {
+          code: request.dutyStationCode || 'N/A',
+          name: request.stationName || 'N/A',
+          country: request.countryCode || 'N/A',
+          region: request.countryCode 
+            ? getRegionFromCountryCode(request.countryCode, countries)
+            : 'N/A',
+          coordinates: request.proposedCoordinates
+            ? `${request.proposedCoordinates.latitude.toFixed(6)}, ${request.proposedCoordinates.longitude.toFixed(6)}`
+            : 'N/A',
+        };
       default:
-        return 'Unknown request';
+        return {
+          code: 'N/A',
+          name: 'Unknown request',
+          country: 'N/A',
+          region: 'N/A',
+          coordinates: 'N/A',
+        };
     }
   };
+
+  const details = getRequestDetails();
 
   return (
     <ListItem
@@ -133,6 +185,8 @@ const SortableBasketItem: React.FC<{
         border: 1,
         borderColor: 'divider',
         borderRadius: 1,
+        flexDirection: 'column',
+        alignItems: 'stretch',
         '&:hover': {
           bgcolor: 'action.hover',
         },
@@ -163,15 +217,31 @@ const SortableBasketItem: React.FC<{
           size="small"
         />
 
-        {/* Request Details */}
+        {/* Code - MOST IMPORTANT */}
+        <Chip
+          label={`Code: ${details.code}`}
+          color="primary"
+          variant="outlined"
+          sx={{ fontWeight: 'bold', fontSize: '0.875rem' }}
+        />
+
+        {/* Request Name */}
         <Box sx={{ flex: 1 }}>
-          <Typography variant="body2" noWrap>
-            {getRequestDetails()}
+          <Typography variant="body2" fontWeight="medium" noWrap>
+            {details.name}
           </Typography>
           <Typography variant="caption" color="text.secondary" noWrap>
-            {item.request.organization} • {new Date(item.addedAt).toLocaleDateString()}
+            {details.country} • {item.request.organization}
           </Typography>
         </Box>
+
+        {/* Expand/Collapse Button */}
+        <IconButton
+          size="small"
+          onClick={() => setExpanded(!expanded)}
+        >
+          {expanded ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+        </IconButton>
 
         {/* Delete Button */}
         <IconButton
@@ -182,6 +252,44 @@ const SortableBasketItem: React.FC<{
           <DeleteIcon />
         </IconButton>
       </Box>
+
+      {/* Expanded Details */}
+      <Collapse in={expanded} timeout="auto" unmountOnExit>
+        <Box sx={{ mt: 2, pl: 8, pr: 2, pb: 1 }}>
+          <Grid container spacing={2}>
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <Typography variant="caption" color="text.secondary">Duty Station Code</Typography>
+              <Typography variant="body2" fontWeight="bold" sx={{ mb: 1 }}>
+                {details.code}
+              </Typography>
+            </Grid>
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <Typography variant="caption" color="text.secondary">Name</Typography>
+              <Typography variant="body2" sx={{ mb: 1 }}>
+                {details.name}
+              </Typography>
+            </Grid>
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <Typography variant="caption" color="text.secondary">Country</Typography>
+              <Typography variant="body2" sx={{ mb: 1 }}>
+                {details.country}
+              </Typography>
+            </Grid>
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <Typography variant="caption" color="text.secondary">Region</Typography>
+              <Typography variant="body2" sx={{ mb: 1 }}>
+                {details.region}
+              </Typography>
+            </Grid>
+            <Grid size={{ xs: 12 }}>
+              <Typography variant="caption" color="text.secondary">GPS Coordinates</Typography>
+              <Typography variant="body2" sx={{ mb: 1, fontFamily: 'monospace' }}>
+                {details.coordinates}
+              </Typography>
+            </Grid>
+          </Grid>
+        </Box>
+      </Collapse>
     </ListItem>
   );
 };
