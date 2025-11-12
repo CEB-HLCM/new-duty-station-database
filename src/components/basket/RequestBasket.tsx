@@ -58,6 +58,7 @@ interface RequestBasketProps {
   onSubmit: () => void;
   onClear: () => void;
   isSubmitting: boolean;
+  emptyMessage?: string;
 }
 
 /**
@@ -304,6 +305,7 @@ export const RequestBasket: React.FC<RequestBasketProps> = ({
   onSubmit,
   onClear,
   isSubmitting,
+  emptyMessage = 'Your basket is empty. Create a request using the form above to get started.',
 }) => {
   const [confirmDialog, setConfirmDialog] = useState<'submit' | 'clear' | null>(null);
 
@@ -388,7 +390,7 @@ export const RequestBasket: React.FC<RequestBasketProps> = ({
         {/* Empty State */}
         {basket.length === 0 && (
           <Alert severity="info">
-            Your basket is empty. Create a request using the form above to get started.
+            {emptyMessage}
           </Alert>
         )}
 
