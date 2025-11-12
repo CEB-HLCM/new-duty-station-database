@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useReducer, useEffect, type ReactNode } from 'react';
+import { createContext, useContext, useReducer, useEffect, useMemo, useCallback, type ReactNode } from 'react';
 import type { DutyStation, Country } from '../types';
 import { fetchDutyStationsWithCountriesCached, fetchCountries } from '../services/dataService';
 
@@ -91,7 +91,7 @@ export function DataProvider({ children }: DataProviderProps) {
   const [state, dispatch] = useReducer(dataReducer, initialState);
 
   // Fetch data function
-  const fetchData = async (forceRefresh: boolean = false) => {
+  const fetchData = useCallback(async (forceRefresh: boolean = false) => {
     try {
       dispatch({ type: 'FETCH_START' });
       
@@ -115,44 +115,44 @@ export function DataProvider({ children }: DataProviderProps) {
       console.error('DataContext: Failed to fetch data:', error);
       dispatch({ type: 'FETCH_ERROR', payload: errorMessage });
     }
-  };
+  }, []);
 
   // Refresh data function - forces cache clear to get latest data
-  const refreshData = async () => {
+  const refreshData = useCallback(async () => {
     dispatch({ type: 'REFRESH_DATA' });
     await fetchData(true); // Force refresh to clear cache
-  };
+  }, [fetchData]);
 
   // Clear error function
-  const clearError = () => {
+  const clearError = useCallback(() => {
     dispatch({ type: 'CLEAR_ERROR' });
-  };
+  }, []);
 
   // Utility functions
-  const getDutyStationByCode = (code: string): DutyStation | undefined => {
+  const getDutyStationByCode = useCallback((code: string): DutyStation | undefined => {
     return state.dutyStations.find(station => station.CITY_CODE === code);
-  };
+  }, [state.dutyStations]);
 
-  const getCountriesList = (): Country[] => {
+  const getCountriesList = useCallback((): Country[] => {
     return state.countries;
-  };
+  }, [state.countries]);
 
-  const getUniqueCountries = (): string[] => {
+  const getUniqueCountries = useCallback((): string[] => {
     // Filter out obsolete countries and return only active country names
     return state.countries
       .filter(country => country.OBSOLETE !== '1')
       .map(country => country.COUNTRY_NAME);
-  };
+  }, [state.countries]);
 
   const isDataLoaded = state.dutyStations.length > 0 && !state.loading;
 
   // Load data on mount
   useEffect(() => {
     fetchData();
-  }, []);
+  }, [fetchData]);
 
-  // Context value
-  const contextValue: DataContextType = {
+  // Memoize context value to prevent unnecessary re-renders
+  const contextValue: DataContextType = useMemo(() => ({
     ...state,
     refreshData,
     clearError,
@@ -160,7 +160,15 @@ export function DataProvider({ children }: DataProviderProps) {
     getCountriesList,
     getUniqueCountries,
     isDataLoaded,
-  };
+  }), [
+    state,
+    refreshData,
+    clearError,
+    getDutyStationByCode,
+    getCountriesList,
+    getUniqueCountries,
+    isDataLoaded,
+  ]);
 
   return (
     <DataContext.Provider value={contextValue}>

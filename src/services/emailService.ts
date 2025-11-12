@@ -2,6 +2,8 @@
 import emailjs from '@emailjs/browser';
 import type { BasketItem, DutyStationRequest, SubmissionResult } from '../schemas/dutyStationSchema';
 import type { RequestType } from '../types/request';
+import type { Country } from '../types/dutyStation';
+import { fetchCountries } from './dataService';
 
 /**
  * EmailJS configuration
@@ -144,51 +146,211 @@ const formatRequestDetails = (request: DutyStationRequest): string => {
 };
 
 /**
- * Format multiple requests for batch submission
+ * Format requests as HTML table for email template {{{requests}}} placeholder
+ * Uses new field names: CITY_CODE, COUNTRY_CODE, CITY_NAME, COUNTRY_NAME, REGION, LATITUDE, LONGITUDE
  */
-const formatBatchRequestDetails = (items: BasketItem[]): string => {
-  const lines: string[] = [
-    `Total Requests: ${items.length}`,
-    '',
-    '═══════════════════════════════════════════════════',
-    '',
-  ];
-
-  items.forEach((item, index) => {
-    lines.push(`REQUEST ${index + 1} of ${items.length}:`);
-    lines.push('');
-    lines.push(formatRequestDetails(item.request));
-    lines.push('');
-    lines.push('═══════════════════════════════════════════════════');
-    lines.push('');
+const formatRequestsAsHtmlTable = (items: BasketItem[], countries: Country[]): string => {
+  // Create country lookup map for country name and region
+  const countryMap = new Map<string, { name: string; region: string }>();
+  countries.forEach(country => {
+    countryMap.set(country.COUNTRY_CODE, {
+      name: country.COUNTRY_NAME,
+      region: country.REGION || ''
+    });
   });
 
-  return lines.join('\n');
+  let emailTable = `<table style="border-collapse: collapse; width: 80%; height: 18px;" border="1">
+    <tbody>
+    <tr style="height: 18px;">
+    <td style="width: 14%; height: 18px;"><strong>CITY_CODE</strong></td>
+    <td style="width: 14%; height: 18px;"><strong>COUNTRY_CODE</strong></td>
+    <td style="width: 14%; height: 18px;"><strong>CITY_NAME</strong></td>
+    <td style="width: 14%; height: 18px;"><strong>COUNTRY_NAME</strong></td>
+    <td style="width: 14%; height: 18px;"><strong>REGION</strong></td>
+    <td style="width: 14%; height: 18px;"><strong>LATITUDE</strong></td>
+    <td style="width: 14%; height: 18px;"><strong>LONGITUDE</strong></td>
+    </tr>`;
+
+  items.forEach((item) => {
+    const request = item.request;
+    
+    // Extract values based on request type
+    let dsCode = '';
+    let countryCode = '';
+    let cityName = '';
+    let countryName = '';
+    let region = '';
+    let latitude = '';
+    let longitude = '';
+
+    switch (request.requestType) {
+      case 'add':
+        dsCode = ('proposedCode' in request && request.proposedCode) ? request.proposedCode : '';
+        countryCode = ('countryCode' in request && request.countryCode) ? request.countryCode : '';
+        cityName = ('name' in request && request.name) ? request.name : '';
+        // Get country name and region from countries data
+        const addCountryInfo = countryMap.get(countryCode);
+        countryName = addCountryInfo?.name || (('country' in request && request.country) ? request.country : '');
+        region = addCountryInfo?.region || '';
+        latitude = ('coordinates' in request && request.coordinates?.latitude !== undefined) 
+          ? String(request.coordinates.latitude) : '';
+        longitude = ('coordinates' in request && request.coordinates?.longitude !== undefined) 
+          ? String(request.coordinates.longitude) : '';
+        break;
+
+      case 'update':
+        dsCode = ('dutyStationCode' in request && request.dutyStationCode) ? request.dutyStationCode : '';
+        countryCode = ('countryCode' in request && request.countryCode) ? request.countryCode : '';
+        cityName = ('proposedChanges' in request && request.proposedChanges?.name) 
+          ? request.proposedChanges.name 
+          : ('currentData' in request && request.currentData?.name) ? request.currentData.name : '';
+        // Get country name and region from countries data
+        const updateCountryInfo = countryMap.get(countryCode);
+        countryName = updateCountryInfo?.name || (('currentData' in request && request.currentData?.country) ? request.currentData.country : '');
+        region = updateCountryInfo?.region || '';
+        // For updates, use proposed coordinates if available
+        if ('proposedChanges' in request && request.proposedChanges?.coordinates) {
+          latitude = String(request.proposedChanges.coordinates.latitude);
+          longitude = String(request.proposedChanges.coordinates.longitude);
+        } else if ('currentData' in request && request.currentData?.coordinates) {
+          latitude = String(request.currentData.coordinates.latitude);
+          longitude = String(request.currentData.coordinates.longitude);
+        }
+        break;
+
+      case 'remove':
+        dsCode = ('dutyStationCode' in request && request.dutyStationCode) ? request.dutyStationCode : '';
+        countryCode = ('countryCode' in request && request.countryCode) ? request.countryCode : '';
+        cityName = ('currentData' in request && request.currentData?.name) ? request.currentData.name : '';
+        // Get country name and region from countries data
+        const removeCountryInfo = countryMap.get(countryCode);
+        countryName = removeCountryInfo?.name || (('currentData' in request && request.currentData?.country) ? request.currentData.country : '');
+        region = removeCountryInfo?.region || '';
+        latitude = '';
+        longitude = '';
+        break;
+
+      case 'coordinate_update':
+        dsCode = ('dutyStationCode' in request && request.dutyStationCode) ? request.dutyStationCode : '';
+        countryCode = ('countryCode' in request && request.countryCode) ? request.countryCode : '';
+        cityName = ('stationName' in request && request.stationName) ? request.stationName : '';
+        // Get country name and region from countries data
+        const coordCountryInfo = countryMap.get(countryCode);
+        countryName = coordCountryInfo?.name || '';
+        region = coordCountryInfo?.region || '';
+        latitude = ('proposedCoordinates' in request && request.proposedCoordinates?.latitude !== undefined) 
+          ? String(request.proposedCoordinates.latitude) : '';
+        longitude = ('proposedCoordinates' in request && request.proposedCoordinates?.longitude !== undefined) 
+          ? String(request.proposedCoordinates.longitude) : '';
+        break;
+    }
+
+    emailTable += `<tr style="height: 18px;">
+      <td style="width: 14%; height: 18px;">${dsCode}</td>
+      <td style="width: 14%; height: 18px;">${countryCode}</td>
+      <td style="width: 14%; height: 18px;">${cityName}</td>
+      <td style="width: 14%; height: 18px;">${countryName}</td>
+      <td style="width: 14%; height: 18px;">${region}</td>
+      <td style="width: 14%; height: 18px;">${latitude}</td>
+      <td style="width: 14%; height: 18px;">${longitude}</td>
+      </tr>`;
+  });
+
+  emailTable += `</tbody></table>`;
+  
+  // Remove newlines to match old codebase format
+  return emailTable.replace(/(\r\n|\n|\r)/gm, '');
 };
 
 /**
- * Generate summary statistics for batch submission
+ * Format requests as CSV rows for email template {{{json_snippet}}} placeholder
+ * Includes CSV rows for ADD requests and instructions for other request types
  */
-const generateBatchSummary = (items: BasketItem[]): string => {
-  const counts = {
-    add: items.filter(i => i.request.requestType === 'add').length,
-    update: items.filter(i => i.request.requestType === 'update').length,
-    remove: items.filter(i => i.request.requestType === 'remove').length,
-    coordinate_update: items.filter(i => i.request.requestType === 'coordinate_update').length,
-  };
+const formatRequestsAsCsv = (items: BasketItem[], countries: Country[]): string => {
+  // Create country lookup map for country name and region
+  const countryMap = new Map<string, { name: string; region: string }>();
+  countries.forEach(country => {
+    countryMap.set(country.COUNTRY_CODE, {
+      name: country.COUNTRY_NAME,
+      region: country.REGION || ''
+    });
+  });
+  const csvRows: string[] = [];
+  const instructions: string[] = [];
 
-  const lines: string[] = [
-    'Request Summary:',
-    `  Total Requests: ${items.length}`,
-  ];
+  items.forEach((item) => {
+    const request = item.request;
 
-  if (counts.add > 0) lines.push(`  - Add New Duty Station: ${counts.add}`);
-  if (counts.update > 0) lines.push(`  - Update Existing Duty Station: ${counts.update}`);
-  if (counts.remove > 0) lines.push(`  - Remove Duty Station: ${counts.remove}`);
-  if (counts.coordinate_update > 0) lines.push(`  - Correct Coordinates: ${counts.coordinate_update}`);
+    switch (request.requestType) {
+      case 'add':
+        // Format as CSV row: CITY_CODE,COUNTRY_CODE,CITY_NAME,COUNTRY_NAME,REGION,LATITUDE,LONGITUDE,COMMON_NAME
+        const dsCode = ('proposedCode' in request && request.proposedCode) ? request.proposedCode : '';
+        const countryCode = ('countryCode' in request && request.countryCode) ? request.countryCode : '';
+        const cityName = ('name' in request && request.name) ? request.name : '';
+        const commonName = ('commonName' in request && request.commonName) ? request.commonName || '' : '';
+        const lat = ('coordinates' in request && request.coordinates?.latitude !== undefined) 
+          ? String(request.coordinates.latitude) : '';
+        const lng = ('coordinates' in request && request.coordinates?.longitude !== undefined) 
+          ? String(request.coordinates.longitude) : '';
+        // Get country name and region from countries data
+        const csvAddCountryInfo = countryMap.get(countryCode);
+        const countryName = csvAddCountryInfo?.name || (('country' in request && request.country) ? request.country : '');
+        const region = csvAddCountryInfo?.region || '';
+        
+        // CSV format: CITY_CODE,COUNTRY_CODE,CITY_NAME,COUNTRY_NAME,REGION,LATITUDE,LONGITUDE,COMMON_NAME
+        csvRows.push(`${dsCode},${countryCode},"${cityName}","${countryName}",${region},${lat},${lng},"${commonName}"`);
+        break;
 
-  return lines.join('\n');
+      case 'update':
+        // Instructions for UPDATE requests
+        const updateDsCode = ('dutyStationCode' in request && request.dutyStationCode) ? request.dutyStationCode : '';
+        const updateCountryCode = ('countryCode' in request && request.countryCode) ? request.countryCode : '';
+        instructions.push(`UPDATE: Duty Station ${updateDsCode} (${updateCountryCode}) - See request details above for fields to update`);
+        break;
+
+      case 'remove':
+        // Instructions for REMOVE requests
+        const removeDsCode = ('dutyStationCode' in request && request.dutyStationCode) ? request.dutyStationCode : '';
+        const removeCountryCode = ('countryCode' in request && request.countryCode) ? request.countryCode : '';
+        instructions.push(`REMOVE: Duty Station ${removeDsCode} (${removeCountryCode}) - Mark as OBSOLETE=1 in CSV`);
+        break;
+
+      case 'coordinate_update':
+        // Instructions for COORDINATE_UPDATE requests
+        const coordDsCode = ('dutyStationCode' in request && request.dutyStationCode) ? request.dutyStationCode : '';
+        const coordCountryCode = ('countryCode' in request && request.countryCode) ? request.countryCode : '';
+        const newLat = ('proposedCoordinates' in request && request.proposedCoordinates?.latitude !== undefined) 
+          ? String(request.proposedCoordinates.latitude) : '';
+        const newLng = ('proposedCoordinates' in request && request.proposedCoordinates?.longitude !== undefined) 
+          ? String(request.proposedCoordinates.longitude) : '';
+        instructions.push(`COORDINATE UPDATE: Duty Station ${coordDsCode} (${coordCountryCode}) - Update LATITUDE=${newLat}, LONGITUDE=${newLng}`);
+        break;
+    }
+  });
+
+  let csvSnippet = '';
+  
+  // Add CSV header
+  if (csvRows.length > 0) {
+    csvSnippet += 'CITY_CODE,COUNTRY_CODE,CITY_NAME,COUNTRY_NAME,REGION,LATITUDE,LONGITUDE,COMMON_NAME\n';
+    csvSnippet += csvRows.join('\n');
+  }
+
+  // Add instructions for non-ADD requests
+  if (instructions.length > 0) {
+    if (csvSnippet) csvSnippet += '\n\n';
+    csvSnippet += 'INSTRUCTIONS FOR OTHER REQUEST TYPES:\n';
+    csvSnippet += instructions.join('\n');
+  }
+
+  // Format with HTML entities like old codebase (&#13; for newline, &#9; for tab)
+  return csvSnippet
+    .replace(/\r\n/g, '&#13;')
+    .replace(/\n/g, '&#13;')
+    .replace(/\r/g, '&#13;')
+    .replace(/\t/g, '&#9;');
 };
+
 
 /**
  * Send single request via EmailJS
@@ -258,24 +420,42 @@ const splitIntoChunks = (items: BasketItem[]): BasketItem[][] => {
 
 /**
  * Send a single batch email
+ * Uses template variables matching old codebase: {{email}}, {{{requests}}}, {{{json_snippet}}}
  */
 const sendSingleBatch = async (
   batch: BasketItem[],
   batchNumber: number,
-  totalBatches: number
+  totalBatches: number,
+  countries: Country[]
 ): Promise<{ success: boolean; error?: string }> => {
   try {
+    // Get email address from first request (all requests in batch should have same submitter)
+    const emailAddress = batch[0]?.request.submittedBy || '';
+    
+    // Format requests as HTML table for {{{requests}}} placeholder
+    const requestsTable = formatRequestsAsHtmlTable(batch, countries);
+    
+    // Format CSV rows for {{{json_snippet}}} placeholder
+    const csvSnippet = formatRequestsAsCsv(batch, countries);
+
+    // Template parameters matching old codebase format
+    // EmailJS template expects: {{email}}, {{{requests}}}, {{{json_snippet}}}
+    // Note: EmailJS variable names are case-sensitive and must match template exactly
     const templateParams = {
-      to_name: 'UN CEB Duty Station Team',
-      from_name: batch[0]?.request.submittedBy || 'UN Staff Member',
-      organization: batch[0]?.request.organization || 'UN Organization',
-      request_count: batch.length,
-      request_summary: generateBatchSummary(batch),
-      request_details: formatBatchRequestDetails(batch),
-      request_date: new Date().toLocaleDateString(),
-      reply_to: '', // Could be added from form if needed
-      batch_info: totalBatches > 1 ? `Batch ${batchNumber} of ${totalBatches}` : '',
+      email: emailAddress, // {{email}} - email address of the user (MUST match template variable name exactly)
+      requests: requestsTable, // {{{requests}}} - HTML table with request details
+      json_snippet: csvSnippet, // {{{json_snippet}}} - CSV rows formatted with HTML entities
     };
+
+    // Debug logging to verify email is being passed
+    console.log('[EmailJS] Template params:', {
+      email: emailAddress,
+      emailLength: emailAddress.length,
+      requestsLength: requestsTable.length,
+      jsonSnippetLength: csvSnippet.length,
+      batchNumber,
+      totalBatches
+    });
 
     const response = await emailjs.send(
       EMAIL_CONFIG.serviceId,
@@ -327,6 +507,16 @@ export const sendBatchRequests = async (
   }
 
   try {
+    // Fetch countries data for country name and region lookups
+    let countries: Country[] = [];
+    try {
+      countries = await fetchCountries();
+      console.log(`[EmailJS] Loaded ${countries.length} countries for email formatting`);
+    } catch (error) {
+      console.warn('[EmailJS] Failed to fetch countries data, proceeding without country/region info:', error);
+      // Continue without countries data - country/region will be empty
+    }
+
     // Split into chunks of 15 (matches old codebase)
     const chunks = splitIntoChunks(items);
     const totalBatches = chunks.length;
@@ -343,7 +533,7 @@ export const sendBatchRequests = async (
       
       console.log(`[EmailJS] Sending batch ${batchNumber}/${totalBatches} (${batch.length} requests)`);
       
-      const result = await sendSingleBatch(batch, batchNumber, totalBatches);
+      const result = await sendSingleBatch(batch, batchNumber, totalBatches, countries);
       
       if (!result.success) {
         allSuccessful = false;
