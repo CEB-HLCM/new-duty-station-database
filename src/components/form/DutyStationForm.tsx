@@ -103,13 +103,13 @@ export const DutyStationForm: React.FC<DutyStationFormProps> = ({
     if (station) {
       // Populate form fields based on request type
       if (requestType === RequestType.UPDATE) {
-        form.setValue('dutyStationCode' as any, station.DS);
-        form.setValue('countryCode' as any, station.CTY);
-        form.setValue('stationName' as any, station.NAME);
+        form.setValue('dutyStationCode' as any, station.CITY_CODE);
+        form.setValue('countryCode' as any, station.COUNTRY_CODE);
+        form.setValue('stationName' as any, station.CITY_NAME);
         form.setValue('currentData' as any, {
-          name: station.NAME,
+          name: station.CITY_NAME,
           country: station.COUNTRY || '',
-          commonName: station.COMMONNAME || '',
+          commonName: station.CITY_COMMON_NAME || '',
           coordinates: {
             latitude: station.LATITUDE,
             longitude: station.LONGITUDE,
@@ -121,17 +121,17 @@ export const DutyStationForm: React.FC<DutyStationFormProps> = ({
           longitude: station.LONGITUDE,
         });
       } else if (requestType === RequestType.REMOVE) {
-        form.setValue('dutyStationCode' as any, station.DS);
-        form.setValue('countryCode' as any, station.CTY);
+        form.setValue('dutyStationCode' as any, station.CITY_CODE);
+        form.setValue('countryCode' as any, station.COUNTRY_CODE);
         form.setValue('currentData' as any, {
-          name: station.NAME,
+          name: station.CITY_NAME,
           country: station.COUNTRY || '',
-          commonName: station.COMMONNAME || '',
+          commonName: station.CITY_COMMON_NAME || '',
         });
       } else if (requestType === RequestType.COORDINATE_UPDATE) {
-        form.setValue('dutyStationCode' as any, station.DS);
-        form.setValue('countryCode' as any, station.CTY);
-        form.setValue('stationName' as any, station.NAME);
+        form.setValue('dutyStationCode' as any, station.CITY_CODE);
+        form.setValue('countryCode' as any, station.COUNTRY_CODE);
+        form.setValue('stationName' as any, station.CITY_NAME);
         form.setValue('currentCoordinates' as any, {
           latitude: station.LATITUDE,
           longitude: station.LONGITUDE,
@@ -196,16 +196,16 @@ export const DutyStationForm: React.FC<DutyStationFormProps> = ({
           longitude: 0,
         },
         // Update request fields
-        dutyStationCode: existingStation?.DS || '',
-        stationName: existingStation?.NAME || '',
+        dutyStationCode: existingStation?.CITY_CODE || '',
+        stationName: existingStation?.CITY_NAME || '',
         currentCoordinates: existingStation ? {
           latitude: existingStation.LATITUDE,
           longitude: existingStation.LONGITUDE,
         } : { latitude: 0, longitude: 0 },
         currentData: existingStation ? {
-          name: existingStation.NAME,
+          name: existingStation.CITY_NAME,
           country: existingStation.COUNTRY || '',
-          commonName: existingStation.COMMONNAME || '',
+          commonName: existingStation.CITY_COMMON_NAME || '',
           coordinates: {
             latitude: existingStation.LATITUDE,
             longitude: existingStation.LONGITUDE,
@@ -287,8 +287,8 @@ export const DutyStationForm: React.FC<DutyStationFormProps> = ({
     setSelectedCountry(country);
     if (country) {
       // Auto-populate country code and name
-      form.setValue('country', country.NAME);
-      form.setValue('countryCode', country.CTYCD);
+      form.setValue('country', country.COUNTRY_NAME);
+      form.setValue('countryCode', country.COUNTRY_CODE);
     } else {
       form.setValue('country', '');
       form.setValue('countryCode', '');
@@ -537,8 +537,8 @@ export const DutyStationForm: React.FC<DutyStationFormProps> = ({
                     </Alert>
                     <EnhancedCitySearch
                       onCitySelect={handleCitySelect}
-                      countryFilter={selectedCountry.ISO3 || selectedCountry.CTYCD}
-                      countryName={selectedCountry.NAME}
+                      countryFilter={selectedCountry.ISO3 || selectedCountry.COUNTRY_CODE}
+                      countryName={selectedCountry.COUNTRY_NAME}
                       label="City/Town Name *"
                       required={true}
                       error={!!(form.formState.errors as any).name}
@@ -719,7 +719,7 @@ export const DutyStationForm: React.FC<DutyStationFormProps> = ({
                   <Autocomplete
                     options={stationSearchResults}
                     getOptionLabel={(option) => 
-                      `${option.NAME} - ${option.COUNTRY || option.CTY} (${option.DS})`
+                      `${option.CITY_NAME} - ${option.COUNTRY || option.COUNTRY_CODE} (${option.CITY_CODE})`
                     }
                     value={selectedStation}
                     onChange={(_, value) => handleStationSelect(value)}
@@ -735,7 +735,7 @@ export const DutyStationForm: React.FC<DutyStationFormProps> = ({
                         error={!!(form.formState.errors as any).dutyStationCode}
                         helperText={
                           (form.formState.errors as any).dutyStationCode?.message ||
-                          (selectedStation ? `Selected: ${selectedStation.NAME} (${selectedStation.DS})` : 'Search and select a duty station')
+                          (selectedStation ? `Selected: ${selectedStation.CITY_NAME} (${selectedStation.CITY_CODE})` : 'Search and select a duty station')
                         }
                         InputProps={{
                           ...params.InputProps,
@@ -754,14 +754,14 @@ export const DutyStationForm: React.FC<DutyStationFormProps> = ({
                       />
                     )}
                     renderOption={(props, option) => (
-                      <Box component="li" {...props} key={`${option.DS}-${option.CTY}`}>
+                      <Box component="li" {...props} key={`${option.CITY_CODE}-${option.COUNTRY_CODE}`}>
                         <Box>
                           <Typography variant="body2" fontWeight="medium">
-                            {option.NAME}
+                            {option.CITY_NAME}
                           </Typography>
                           <Typography variant="caption" color="text.secondary">
-                            Code: {option.DS} • Country: {option.COUNTRY || option.CTY}
-                            {option.COMMONNAME && ` • Common: ${option.COMMONNAME}`}
+                            Code: {option.CITY_CODE} • Country: {option.COUNTRY || option.COUNTRY_CODE}
+                            {option.CITY_COMMON_NAME && ` • Common: ${option.CITY_COMMON_NAME}`}
                           </Typography>
                         </Box>
                       </Box>
@@ -790,7 +790,7 @@ export const DutyStationForm: React.FC<DutyStationFormProps> = ({
                           ✓ <strong>Step 2:</strong> Update Information
                         </Typography>
                         <Typography variant="caption">
-                          Current station: <strong>{selectedStation.NAME}</strong> ({selectedStation.DS}, {selectedStation.COUNTRY})
+                          Current station: <strong>{selectedStation.CITY_NAME}</strong> ({selectedStation.CITY_CODE}, {selectedStation.COUNTRY})
                         </Typography>
                       </Alert>
                     </Grid>
@@ -806,7 +806,7 @@ export const DutyStationForm: React.FC<DutyStationFormProps> = ({
                             value={field.value || ''}
                             label="New Name (Optional)"
                             fullWidth
-                            placeholder={selectedStation.NAME}
+                            placeholder={selectedStation.CITY_NAME}
                             error={!!fieldState.error}
                             helperText={fieldState.error?.message || 'Leave blank to keep current'}
                           />
@@ -825,7 +825,7 @@ export const DutyStationForm: React.FC<DutyStationFormProps> = ({
                             value={field.value || ''}
                             label="New Common Name (Optional)"
                             fullWidth
-                            placeholder={selectedStation.COMMONNAME || 'None'}
+                            placeholder={selectedStation.CITY_COMMON_NAME || 'None'}
                             error={!!fieldState.error}
                             helperText={fieldState.error?.message || 'Leave blank to keep current'}
                           />
@@ -887,7 +887,7 @@ export const DutyStationForm: React.FC<DutyStationFormProps> = ({
                   <Autocomplete
                     options={stationSearchResults}
                     getOptionLabel={(option) => 
-                      `${option.NAME} - ${option.COUNTRY || option.CTY} (${option.DS})`
+                      `${option.CITY_NAME} - ${option.COUNTRY || option.COUNTRY_CODE} (${option.CITY_CODE})`
                     }
                     value={selectedStation}
                     onChange={(_, value) => handleStationSelect(value)}
@@ -903,7 +903,7 @@ export const DutyStationForm: React.FC<DutyStationFormProps> = ({
                         error={!!(form.formState.errors as any).dutyStationCode}
                         helperText={
                           (form.formState.errors as any).dutyStationCode?.message ||
-                          (selectedStation ? `Selected: ${selectedStation.NAME} (${selectedStation.DS})` : 'Search and select a duty station')
+                          (selectedStation ? `Selected: ${selectedStation.CITY_NAME} (${selectedStation.CITY_CODE})` : 'Search and select a duty station')
                         }
                         InputProps={{
                           ...params.InputProps,
@@ -922,14 +922,14 @@ export const DutyStationForm: React.FC<DutyStationFormProps> = ({
                       />
                     )}
                     renderOption={(props, option) => (
-                      <Box component="li" {...props} key={`${option.DS}-${option.CTY}`}>
+                      <Box component="li" {...props} key={`${option.CITY_CODE}-${option.COUNTRY_CODE}`}>
                         <Box>
                           <Typography variant="body2" fontWeight="medium">
-                            {option.NAME}
+                            {option.CITY_NAME}
                           </Typography>
                           <Typography variant="caption" color="text.secondary">
-                            Code: {option.DS} • Country: {option.COUNTRY || option.CTY}
-                            {option.COMMONNAME && ` • Common: ${option.COMMONNAME}`}
+                            Code: {option.CITY_CODE} • Country: {option.COUNTRY || option.COUNTRY_CODE}
+                            {option.CITY_COMMON_NAME && ` • Common: ${option.CITY_COMMON_NAME}`}
                           </Typography>
                         </Box>
                       </Box>
@@ -951,7 +951,7 @@ export const DutyStationForm: React.FC<DutyStationFormProps> = ({
                 {selectedStation && (
                   <Grid size={{ xs: 12 }}>
                     <Alert severity="warning">
-                      Requesting to mark as obsolete: <strong>{selectedStation.NAME}</strong> ({selectedStation.DS}, {selectedStation.COUNTRY})
+                      Requesting to mark as obsolete: <strong>{selectedStation.CITY_NAME}</strong> ({selectedStation.CITY_CODE}, {selectedStation.COUNTRY})
                     </Alert>
                   </Grid>
                 )}
@@ -973,7 +973,7 @@ export const DutyStationForm: React.FC<DutyStationFormProps> = ({
                   <Autocomplete
                     options={stationSearchResults}
                     getOptionLabel={(option) => 
-                      `${option.NAME} - ${option.COUNTRY || option.CTY} (${option.DS})`
+                      `${option.CITY_NAME} - ${option.COUNTRY || option.COUNTRY_CODE} (${option.CITY_CODE})`
                     }
                     value={selectedStation}
                     onChange={(_, value) => handleStationSelect(value)}
@@ -989,7 +989,7 @@ export const DutyStationForm: React.FC<DutyStationFormProps> = ({
                         error={!!(form.formState.errors as any).dutyStationCode}
                         helperText={
                           (form.formState.errors as any).dutyStationCode?.message ||
-                          (selectedStation ? `Selected: ${selectedStation.NAME} (${selectedStation.DS})` : 'Search and select a duty station')
+                          (selectedStation ? `Selected: ${selectedStation.CITY_NAME} (${selectedStation.CITY_CODE})` : 'Search and select a duty station')
                         }
                         InputProps={{
                           ...params.InputProps,
@@ -1008,14 +1008,14 @@ export const DutyStationForm: React.FC<DutyStationFormProps> = ({
                       />
                     )}
                     renderOption={(props, option) => (
-                      <Box component="li" {...props} key={`${option.DS}-${option.CTY}`}>
+                      <Box component="li" {...props} key={`${option.CITY_CODE}-${option.COUNTRY_CODE}`}>
                         <Box>
                           <Typography variant="body2" fontWeight="medium">
-                            {option.NAME}
+                            {option.CITY_NAME}
                           </Typography>
                           <Typography variant="caption" color="text.secondary">
-                            Code: {option.DS} • Country: {option.COUNTRY || option.CTY}
-                            {option.COMMONNAME && ` • Common: ${option.COMMONNAME}`}
+                            Code: {option.CITY_CODE} • Country: {option.COUNTRY || option.COUNTRY_CODE}
+                            {option.CITY_COMMON_NAME && ` • Common: ${option.CITY_COMMON_NAME}`}
                           </Typography>
                         </Box>
                       </Box>
@@ -1040,7 +1040,7 @@ export const DutyStationForm: React.FC<DutyStationFormProps> = ({
                   <>
                     <Grid size={{ xs: 12 }}>
                       <Alert severity="info" sx={{ mb: 2 }}>
-                        Current coordinates for <strong>{selectedStation.NAME}</strong>: {selectedStation.LATITUDE.toFixed(6)}, {selectedStation.LONGITUDE.toFixed(6)}
+                        Current coordinates for <strong>{selectedStation.CITY_NAME}</strong>: {selectedStation.LATITUDE.toFixed(6)}, {selectedStation.LONGITUDE.toFixed(6)}
                       </Alert>
                     </Grid>
 

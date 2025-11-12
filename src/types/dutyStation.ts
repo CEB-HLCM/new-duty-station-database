@@ -1,31 +1,32 @@
 // Core duty station interfaces based on CSV data structure
+// Updated to match new CSV field names (December 2025)
 
 export interface DutyStation {
-  DS: string;           // Duty Station Code
-  CTY: string;          // Country Code  
-  NAME: string;         // City Name
-  LATITUDE: number;     // Latitude coordinate
-  LONGITUDE: number;    // Longitude coordinate
-  COMMONNAME: string;   // Common/Alternative name
-  OBSOLETE: string;     // Obsolete flag ("0" or "1")
-  COUNTRY?: string;     // Country name (joined from countries data)
-  REGION?: string;      // Geographic region (Africa, Asia, Europe, Americas, Oceania)
-  CLASS?: string;       // Station classification (A, B, C, D, E, H)
+  CITY_CODE: string;           // Duty Station Code (formerly DS)
+  COUNTRY_CODE: string;        // Country Code (formerly CTY)
+  CITY_NAME: string;          // City Name (formerly NAME)
+  LATITUDE: number;            // Latitude coordinate
+  LONGITUDE: number;           // Longitude coordinate
+  CITY_COMMON_NAME: string;    // Common/Alternative name (formerly COMMONNAME)
+  OBSOLETE: string;            // Obsolete flag ("0" or "1")
+  COUNTRY?: string;            // Country name (joined from countries data)
+  REGION?: string;             // Geographic region (Africa, Asia, Europe, Americas, Oceania)
+  // CLASS field removed - no longer in CSV
 }
 
 export interface Country {
-  CTYCD: string;        // Country Code
-  NAME: string;         // Country Name
-  REGION?: string;      // Geographic region (Africa, Asia, Europe, Americas, Oceania)
-  ISO2?: string;        // ISO 2-letter country code
-  ISO3?: string;        // ISO 3-letter country code
-  OBSOLETE?: string;    // Obsolete flag ("0" or "1")
+  COUNTRY_CODE: string;        // Country Code (formerly CTYCD)
+  COUNTRY_NAME: string;        // Country Name (formerly NAME)
+  REGION?: string;             // Geographic region (Africa, Asia, Europe, Americas, Oceania)
+  ISO2?: string;               // ISO 2-letter country code
+  ISO3?: string;               // ISO 3-letter country code
+  OBSOLETE?: string;           // Obsolete flag ("0" or "1")
 }
 
 // Search and filter interfaces
 export interface DutyStationFilters {
   searchText: string;
-  searchField: 'NAME' | 'COUNTRY' | 'COMMONNAME';
+  searchField: 'CITY_NAME' | 'COUNTRY' | 'CITY_COMMON_NAME';
   showObsolete: boolean;
   countryFilter?: string;
 }

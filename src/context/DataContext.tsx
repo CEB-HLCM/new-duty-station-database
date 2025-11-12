@@ -130,7 +130,7 @@ export function DataProvider({ children }: DataProviderProps) {
 
   // Utility functions
   const getDutyStationByCode = (code: string): DutyStation | undefined => {
-    return state.dutyStations.find(station => station.DS === code);
+    return state.dutyStations.find(station => station.CITY_CODE === code);
   };
 
   const getCountriesList = (): Country[] => {
@@ -141,7 +141,7 @@ export function DataProvider({ children }: DataProviderProps) {
     // Filter out obsolete countries and return only active country names
     return state.countries
       .filter(country => country.OBSOLETE !== '1')
-      .map(country => country.NAME);
+      .map(country => country.COUNTRY_NAME);
   };
 
   const isDataLoaded = state.dutyStations.length > 0 && !state.loading;

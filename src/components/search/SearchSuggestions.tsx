@@ -61,8 +61,8 @@ function SearchSuggestions({
     // Add station name suggestions
     const stationSuggestions = suggestions.filter(suggestion => {
       return dutyStations.some(station => 
-        station.NAME && station.NAME.toLowerCase().includes(lowerQuery) && 
-        station.NAME === suggestion
+        station.CITY_NAME && station.CITY_NAME.toLowerCase().includes(lowerQuery) && 
+        station.CITY_NAME === suggestion
       );
     });
 
@@ -77,8 +77,8 @@ function SearchSuggestions({
     // Add common name suggestions
     const commonSuggestions = suggestions.filter(suggestion => {
       return dutyStations.some(station => 
-        station.COMMONNAME && station.COMMONNAME.toLowerCase().includes(lowerQuery) && 
-        station.COMMONNAME === suggestion
+        station.CITY_COMMON_NAME && station.CITY_COMMON_NAME.toLowerCase().includes(lowerQuery) && 
+        station.CITY_COMMON_NAME === suggestion
       );
     });
 

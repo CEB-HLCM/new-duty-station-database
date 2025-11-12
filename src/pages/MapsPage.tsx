@@ -70,10 +70,10 @@ function MapsPage() {
     
     // Filter stations matching the query
     const matchedStations = dutyStations.filter(station => 
-      station.NAME.toLowerCase().includes(query) ||
+      station.CITY_NAME.toLowerCase().includes(query) ||
       station.COUNTRY?.toLowerCase().includes(query) ||
-      station.DS.toLowerCase().includes(query) ||
-      station.COMMONNAME.toLowerCase().includes(query)
+      station.CITY_CODE.toLowerCase().includes(query) ||
+      station.CITY_COMMON_NAME.toLowerCase().includes(query)
     );
     
     // Sort by relevance:
@@ -84,8 +84,8 @@ function MapsPage() {
     // 5. Everything else alphabetically
     return matchedStations
       .sort((a, b) => {
-        const aName = a.NAME.toLowerCase();
-        const bName = b.NAME.toLowerCase();
+        const aName = a.CITY_NAME.toLowerCase();
+        const bName = b.CITY_NAME.toLowerCase();
         const aCountry = (a.COUNTRY || '').toLowerCase();
         const bCountry = (b.COUNTRY || '').toLowerCase();
         
@@ -196,7 +196,7 @@ function MapsPage() {
               options={searchResults}
               filterOptions={(options) => options} // Bypass MUI's built-in filtering
               getOptionLabel={(option) => 
-                `${option.NAME} - ${option.COUNTRY || option.CTY} (${option.DS})`
+                `${option.CITY_NAME} - ${option.COUNTRY || option.COUNTRY_CODE} (${option.CITY_CODE})`
               }
               value={selectedStation}
               onChange={(_, value) => handleStationSelect(value)}
@@ -229,13 +229,13 @@ function MapsPage() {
                 />
               )}
               renderOption={(props, option) => (
-                <li {...props} key={`${option.DS}-${option.CTY}`}>
+                <li {...props} key={`${option.CITY_CODE}-${option.COUNTRY_CODE}`}>
                   <Stack>
                     <Typography variant="body2">
-                      {option.NAME}
+                      {option.CITY_NAME}
                     </Typography>
                     <Typography variant="caption" color="text.secondary">
-                      {option.COUNTRY || option.CTY} • {option.DS}
+                      {option.COUNTRY || option.COUNTRY_CODE} • {option.CITY_CODE}
                       {option.OBSOLETE === '1' && ' • Obsolete'}
                     </Typography>
                   </Stack>
@@ -376,10 +376,10 @@ function MapsPage() {
             <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} alignItems="center">
               <Box sx={{ flex: 1 }}>
                 <Typography variant="h6">
-                  {selectedStation.NAME}
+                  {selectedStation.CITY_NAME}
                 </Typography>
                 <Typography variant="body2" color="text.secondary">
-                  {selectedStation.COUNTRY || selectedStation.CTY} • Code: {selectedStation.DS}
+                  {selectedStation.COUNTRY || selectedStation.COUNTRY_CODE} • Code: {selectedStation.CITY_CODE}
                   {selectedStation.OBSOLETE === '1' && ' • Status: Obsolete'}
         </Typography>
                 <Typography variant="caption" color="text.secondary" fontFamily="monospace">
@@ -391,7 +391,7 @@ function MapsPage() {
                   variant="contained"
                   size="small"
                   startIcon={<ViewIcon />}
-                  onClick={() => navigate(`/duty-stations/${selectedStation.DS}/${selectedStation.CTY}`)}
+                  onClick={() => navigate(`/duty-stations/${selectedStation.CITY_CODE}/${selectedStation.COUNTRY_CODE}`)}
                 >
                   View Details
                 </Button>

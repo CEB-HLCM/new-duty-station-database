@@ -7,6 +7,7 @@ import type { DutyStation } from '../types';
 import { SearchType, type SearchOptions, type SearchResult, type SearchFilters } from '../types/search';
 
 // Fuse.js configuration for fuzzy search
+// Updated to use new CSV field names (December 2025)
 const fuseOptions: IFuseOptions<DutyStation> = {
   includeScore: true,
   includeMatches: true,
@@ -14,11 +15,11 @@ const fuseOptions: IFuseOptions<DutyStation> = {
   minMatchCharLength: 2,
   keys: [
     {
-      name: 'NAME',
+      name: 'CITY_NAME',
       weight: 0.4,
     },
     {
-      name: 'COMMONNAME',
+      name: 'CITY_COMMON_NAME',
       weight: 0.3,
     },
     {
@@ -26,7 +27,7 @@ const fuseOptions: IFuseOptions<DutyStation> = {
       weight: 0.2,
     },
     {
-      name: 'CTY',
+      name: 'COUNTRY_CODE',
       weight: 0.1,
     },
   ],
@@ -38,7 +39,7 @@ let lastDataHash: string | null = null;
 
 // Create or update Fuse instance
 function getFuseInstance(data: DutyStation[]): Fuse<DutyStation> {
-  const dataHash = JSON.stringify(data.map(d => d.DS)).slice(0, 100); // Simple hash
+  const dataHash = JSON.stringify(data.map(d => d.CITY_CODE)).slice(0, 100); // Simple hash
   
   if (!fuseInstance || lastDataHash !== dataHash) {
     fuseInstance = new Fuse(data, fuseOptions);
@@ -52,7 +53,7 @@ function getFuseInstance(data: DutyStation[]): Fuse<DutyStation> {
 function exactSearch(
   data: DutyStation[], 
   query: string, 
-  fields: (keyof DutyStation)[] = ['NAME', 'COMMONNAME', 'COUNTRY']
+  fields: (keyof DutyStation)[] = ['CITY_NAME', 'CITY_COMMON_NAME', 'COUNTRY']
 ): SearchResult<DutyStation>[] {
   const lowerQuery = query.toLowerCase().trim();
   
@@ -90,7 +91,7 @@ function exactSearch(
 function partialSearch(
   data: DutyStation[], 
   query: string, 
-  fields: (keyof DutyStation)[] = ['NAME', 'COMMONNAME', 'COUNTRY']
+  fields: (keyof DutyStation)[] = ['CITY_NAME', 'CITY_COMMON_NAME', 'COUNTRY']
 ): SearchResult<DutyStation>[] {
   const lowerQuery = query.toLowerCase().trim();
   
@@ -162,7 +163,7 @@ function fuzzySearch(
 function soundexSearch(
   data: DutyStation[], 
   query: string, 
-  fields: (keyof DutyStation)[] = ['NAME', 'COMMONNAME']
+  fields: (keyof DutyStation)[] = ['CITY_NAME', 'CITY_COMMON_NAME']
 ): SearchResult<DutyStation>[] {
   const querySoundex = soundex(query.trim());
   
@@ -232,10 +233,10 @@ export function searchDutyStations(
   }
   
   // Determine search fields - convert string array to proper keys
-  const validFields = ['NAME', 'COMMONNAME', 'COUNTRY', 'DS', 'CTY'] as const;
+  const validFields = ['CITY_NAME', 'CITY_COMMON_NAME', 'COUNTRY', 'CITY_CODE', 'COUNTRY_CODE'] as const;
   const searchFields = fields.length > 0 
     ? fields.filter(f => validFields.includes(f as any)) as (keyof DutyStation)[]
-    : ['NAME', 'COMMONNAME', 'COUNTRY'] as (keyof DutyStation)[];
+    : ['CITY_NAME', 'CITY_COMMON_NAME', 'COUNTRY'] as (keyof DutyStation)[];
   
   // Perform search based on type
   let results: SearchResult<DutyStation>[] = [];
@@ -275,13 +276,13 @@ export function getSearchSuggestions(
   // Collect suggestions from different fields
   data.forEach(station => {
     // Name suggestions
-    if (station.NAME.toLowerCase().includes(lowerQuery)) {
-      suggestions.add(station.NAME);
+    if (station.CITY_NAME.toLowerCase().includes(lowerQuery)) {
+      suggestions.add(station.CITY_NAME);
     }
     
     // Common name suggestions
-    if (station.COMMONNAME && station.COMMONNAME.toLowerCase().includes(lowerQuery)) {
-      suggestions.add(station.COMMONNAME);
+    if (station.CITY_COMMON_NAME && station.CITY_COMMON_NAME.toLowerCase().includes(lowerQuery)) {
+      suggestions.add(station.CITY_COMMON_NAME);
     }
     
     // Country suggestions
@@ -313,7 +314,7 @@ export function multiSearch(
   const {
     threshold = 0.3,
     maxResults = 50,
-    fields = ['NAME', 'COMMONNAME', 'COUNTRY'],
+    fields = ['CITY_NAME', 'CITY_COMMON_NAME', 'COUNTRY'],
   } = options;
   
   if (!query.trim()) return [];
@@ -328,7 +329,7 @@ export function multiSearch(
   
   // Combine results, prioritizing exact matches
   [...exactResults, ...partialResults, ...fuzzyResults].forEach(result => {
-    const key = result.item.DS;
+    const key = result.item.CITY_CODE;
     const existing = resultsMap.get(key);
     
     if (!existing || (result.score || 0) < (existing.score || 0)) {

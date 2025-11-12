@@ -23,13 +23,13 @@ export function exportDutyStationsToCSV(
   fileBaseName: string = 'duty-stations'
 ): void {
   const rows = stations.map(s => ({
-    DS: s.DS,
-    CTY: s.CTY,
-    NAME: s.NAME,
+    CITY_CODE: s.CITY_CODE,
+    COUNTRY_CODE: s.COUNTRY_CODE,
+    CITY_NAME: s.CITY_NAME,
     COUNTRY: s.COUNTRY ?? '',
     LATITUDE: s.LATITUDE,
     LONGITUDE: s.LONGITUDE,
-    COMMONNAME: s.COMMONNAME,
+    CITY_COMMON_NAME: s.CITY_COMMON_NAME,
     OBSOLETE: s.OBSOLETE,
   }));
 
@@ -51,7 +51,7 @@ export function exportDutyStationsToExcel(
   stations: DutyStation[],
   fileBaseName: string = 'duty-stations'
 ): void {
-  const headers = ['DS','CTY','NAME','COUNTRY','LATITUDE','LONGITUDE','COMMONNAME','OBSOLETE'];
+  const headers = ['CITY_CODE','COUNTRY_CODE','CITY_NAME','COUNTRY','LATITUDE','LONGITUDE','CITY_COMMON_NAME','OBSOLETE'];
   const escapeHtml = (text: string) => text
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
@@ -59,13 +59,13 @@ export function exportDutyStationsToExcel(
 
   const rowsHtml = stations.map(s => (
     `<tr>` +
-      `<td>${escapeHtml(s.DS)}</td>` +
-      `<td>${escapeHtml(s.CTY)}</td>` +
-      `<td>${escapeHtml(s.NAME)}</td>` +
+      `<td>${escapeHtml(s.CITY_CODE)}</td>` +
+      `<td>${escapeHtml(s.COUNTRY_CODE)}</td>` +
+      `<td>${escapeHtml(s.CITY_NAME)}</td>` +
       `<td>${escapeHtml(s.COUNTRY ?? '')}</td>` +
       `<td>${s.LATITUDE}</td>` +
       `<td>${s.LONGITUDE}</td>` +
-      `<td>${escapeHtml(s.COMMONNAME ?? '')}</td>` +
+      `<td>${escapeHtml(s.CITY_COMMON_NAME ?? '')}</td>` +
       `<td>${escapeHtml(s.OBSOLETE)}</td>` +
     `</tr>`
   )).join('');

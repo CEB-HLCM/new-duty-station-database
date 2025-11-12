@@ -66,7 +66,7 @@ export const CountrySelector: React.FC<CountrySelectorProps> = ({
 
   // Sort countries alphabetically
   const sortedCountries = [...filteredCountries].sort((a, b) =>
-    a.NAME.localeCompare(b.NAME)
+    a.COUNTRY_NAME.localeCompare(b.COUNTRY_NAME)
   );
 
   const handleRegionChange = (_event: React.MouseEvent<HTMLElement>, newRegion: string | null) => {
@@ -120,8 +120,8 @@ export const CountrySelector: React.FC<CountrySelectorProps> = ({
         options={sortedCountries}
         value={selectedCountry}
         onChange={handleCountryChange}
-        getOptionLabel={(option) => option.NAME}
-        isOptionEqualToValue={(option, value) => option.CTYCD === value.CTYCD}
+        getOptionLabel={(option) => option.COUNTRY_NAME}
+        isOptionEqualToValue={(option, value) => option.COUNTRY_CODE === value.COUNTRY_CODE}
         loading={loading}
         disabled={loading}
         renderInput={(params) => (
@@ -141,16 +141,16 @@ export const CountrySelector: React.FC<CountrySelectorProps> = ({
           />
         )}
         renderOption={(props, option: Country) => (
-          <li {...props} key={option.CTYCD}>
+          <li {...props} key={option.COUNTRY_CODE}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, width: '100%' }}>
               <PublicIcon fontSize="small" color="action" />
               <Box sx={{ flex: 1 }}>
-                <Typography variant="body2">{option.NAME}</Typography>
+                <Typography variant="body2">{option.COUNTRY_NAME}</Typography>
                 <Typography variant="caption" color="text.secondary">
                   {option.REGION || 'Unknown region'}
                 </Typography>
               </Box>
-              <Chip label={option.CTYCD} size="small" variant="outlined" />
+              <Chip label={option.COUNTRY_CODE} size="small" variant="outlined" />
             </Box>
           </li>
         )}
@@ -166,7 +166,7 @@ export const CountrySelector: React.FC<CountrySelectorProps> = ({
       {selectedCountry && (
         <Box sx={{ mt: 1, p: 1, bgcolor: 'success.lighter', borderRadius: 1 }}>
           <Typography variant="caption" color="success.dark">
-            ✓ Selected: <strong>{selectedCountry.NAME}</strong> (Code: {selectedCountry.CTYCD})
+            ✓ Selected: <strong>{selectedCountry.COUNTRY_NAME}</strong> (Code: {selectedCountry.COUNTRY_CODE})
           </Typography>
         </Box>
       )}

@@ -75,8 +75,8 @@ const generateCodeWithPrefix = (
   // Check existing station codes
   const existingCodes = new Set<string>();
   existingStations.forEach(station => {
-    if (station.DS) {
-      existingCodes.add(station.DS.toUpperCase());
+    if (station.CITY_CODE) {
+      existingCodes.add(station.CITY_CODE.toUpperCase());
     }
   });
 
@@ -104,9 +104,9 @@ const generateCodeWithPrefix = (
  */
 export const getRegionFromCountryCode = (
   countryCode: string,
-  countries: Array<{ CTYCD: string; REGION?: string }>
+  countries: Array<{ COUNTRY_CODE: string; REGION?: string }>
 ): string | undefined => {
-  const country = countries.find(c => c.CTYCD === countryCode);
+  const country = countries.find(c => c.COUNTRY_CODE === countryCode);
   return country?.REGION;
 };
 

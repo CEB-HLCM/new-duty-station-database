@@ -62,9 +62,9 @@ function StationDetailPage() {
   const station = useMemo(() => {
     if (!ds || !cty) return null;
     
-    // Find station by DS code and country code
+    // Find station by CITY_CODE and COUNTRY_CODE
     return dutyStations.find(
-      (s) => s.DS.toUpperCase() === ds.toUpperCase() && s.CTY.toUpperCase() === cty.toUpperCase()
+      (s) => s.CITY_CODE.toUpperCase() === ds.toUpperCase() && s.COUNTRY_CODE.toUpperCase() === cty.toUpperCase()
     );
   }, [dutyStations, ds, cty]);
 
@@ -138,9 +138,9 @@ function StationDetailPage() {
 
     const request: DutyStationRequest = {
       requestType: 'coordinate_update',
-      dutyStationCode: station.DS,
-      countryCode: station.CTY,
-      stationName: station.NAME,
+      dutyStationCode: station.CITY_CODE,
+      countryCode: station.COUNTRY_CODE,
+      stationName: station.CITY_NAME,
       currentCoordinates: {
         latitude: station.LATITUDE,
         longitude: station.LONGITUDE,
@@ -232,7 +232,7 @@ function StationDetailPage() {
         >
           Duty Stations
         </Link>
-        <Typography color="text.primary">{station.NAME}</Typography>
+        <Typography color="text.primary">{station.CITY_NAME}</Typography>
       </Breadcrumbs>
 
       {/* Header */}
@@ -243,7 +243,7 @@ function StationDetailPage() {
           </IconButton>
           <Box>
             <Typography variant="h4" component="h1" gutterBottom>
-              {station.NAME}
+              {station.CITY_NAME}
             </Typography>
             <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
               <Chip
@@ -253,7 +253,7 @@ function StationDetailPage() {
                 size="small"
               />
               <Typography variant="body2" color="text.secondary">
-                Code: {station.DS} | Country: {station.CTY}
+                Code: {station.CITY_CODE} | Country: {station.COUNTRY_CODE}
               </Typography>
             </Box>
           </Box>
@@ -286,7 +286,7 @@ function StationDetailPage() {
                     Duty Station Code
                   </Typography>
                   <Typography variant="body1" fontWeight="medium" fontFamily="monospace">
-                    {station.DS}
+                    {station.CITY_CODE}
                   </Typography>
                 </Grid>
                 <Grid size={{ xs: 12 }}>
@@ -294,16 +294,16 @@ function StationDetailPage() {
                     Official Name
                   </Typography>
                   <Typography variant="body1" fontWeight="medium">
-                    {station.NAME}
+                    {station.CITY_NAME}
                   </Typography>
                 </Grid>
-                {station.COMMONNAME && station.COMMONNAME !== station.NAME && (
+                {station.CITY_COMMON_NAME && station.CITY_COMMON_NAME !== station.CITY_NAME && (
                   <Grid size={{ xs: 12 }}>
                     <Typography variant="body2" color="text.secondary">
                       Common Name
                     </Typography>
                     <Typography variant="body1">
-                      {station.COMMONNAME}
+                      {station.CITY_COMMON_NAME}
                     </Typography>
                   </Grid>
                 )}
@@ -312,7 +312,7 @@ function StationDetailPage() {
                     Country
                   </Typography>
                   <Typography variant="body1">
-                    {station.COUNTRY || 'N/A'} ({station.CTY})
+                    {station.COUNTRY || 'N/A'} ({station.COUNTRY_CODE})
                   </Typography>
                 </Grid>
                 {station.REGION && (
@@ -322,16 +322,6 @@ function StationDetailPage() {
                     </Typography>
                     <Typography variant="body1">
                       {station.REGION}
-                    </Typography>
-                  </Grid>
-                )}
-                {station.CLASS && (
-                  <Grid size={{ xs: 12 }}>
-                    <Typography variant="body2" color="text.secondary">
-                      Classification
-                    </Typography>
-                    <Typography variant="body1">
-                      Class {station.CLASS}
                     </Typography>
                   </Grid>
                 )}
@@ -460,10 +450,10 @@ function StationDetailPage() {
           {/* Station Information Header */}
           <Paper sx={{ p: 2, mb: 3, bgcolor: 'primary.main', color: 'primary.contrastText' }}>
             <Typography variant="h6" gutterBottom>
-              {station.NAME}
+              {station.CITY_NAME}
             </Typography>
             <Typography variant="body2">
-              {station.COUNTRY || 'N/A'} • Code: {station.DS}
+              {station.COUNTRY || 'N/A'} • Code: {station.CITY_CODE}
             </Typography>
           </Paper>
 

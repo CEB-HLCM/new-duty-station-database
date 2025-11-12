@@ -171,6 +171,25 @@ The application successfully fetches data directly from the UN CEB public reposi
 
 **✅ Data Loading Successfully** - GitHub raw URLs work perfectly with simple `fetch(url)` calls. **Critical lesson learned**: Avoid custom headers which trigger CORS preflight requests. Data is loaded fresh on each session with proper caching for performance.
 
+### 📝 CSV Field Name Changes (December 2025)
+
+The CSV files have been updated with new field names. The application has been fully adapted to use these new names:
+
+**DSCITYCD.csv Changes:**
+- `DS` → `CITY_CODE`
+- `CTY` → `COUNTRY_CODE`
+- `NAME` → `CITY_NAME`
+- `COMMONNAME` → `CITY_COMMON_NAME`
+- `CTRYNAME` → `COUNTRY_NAME` (now joined from countries data)
+- `CLASS` → **Removed** (no longer in CSV)
+- `UPDATED` → **Removed** (no longer in CSV)
+
+**DSCTRYCD.csv Changes:**
+- `CTYCD` → `COUNTRY_CODE`
+- `NAME` → `COUNTRY_NAME`
+
+All code, components, and documentation have been updated to reflect these changes.
+
 ## 🏗️ Project Structure
 
 ```

@@ -16,15 +16,16 @@ export interface ValidationConfig {
 }
 
 // Default validation configurations
+// Updated to use new CSV field names (December 2025)
 export const DUTY_STATION_VALIDATION_CONFIG: ValidationConfig = {
-  requiredFields: ['DS', 'CTY', 'NAME'],
-  optionalFields: ['LATITUDE', 'LONGITUDE', 'COMMONNAME', 'OBSOLETE'],
+  requiredFields: ['CITY_CODE', 'COUNTRY_CODE', 'CITY_NAME'],
+  optionalFields: ['LATITUDE', 'LONGITUDE', 'CITY_COMMON_NAME', 'OBSOLETE'],
   coordinateValidation: true,
   duplicateCheck: true,
 };
 
 export const COUNTRY_VALIDATION_CONFIG: ValidationConfig = {
-  requiredFields: ['CTYCD', 'NAME'],
+  requiredFields: ['COUNTRY_CODE', 'COUNTRY_NAME'],
   optionalFields: [],
   coordinateValidation: false,
   duplicateCheck: true,
@@ -36,22 +37,22 @@ export function validateDutyStation(station: Partial<DutyStation>): ValidationRe
   const warnings: string[] = [];
 
   // Required field validation
-  if (!station.DS?.trim()) {
-    errors.push('Duty Station code (DS) is required');
-  } else if (!/^[A-Z0-9]{2,6}$/.test(station.DS.trim())) {
+  if (!station.CITY_CODE?.trim()) {
+    errors.push('Duty Station code (CITY_CODE) is required');
+  } else if (!/^[A-Z0-9]{2,6}$/.test(station.CITY_CODE.trim())) {
     warnings.push('Duty Station code should be 2-6 uppercase alphanumeric characters');
   }
 
-  if (!station.CTY?.trim()) {
-    errors.push('Country code (CTY) is required');
-  } else if (!/^[A-Z]{2,3}$/.test(station.CTY.trim())) {
-    warnings.push('Country code should be 2-3 uppercase letters');
+  if (!station.COUNTRY_CODE?.trim()) {
+    errors.push('Country code (COUNTRY_CODE) is required');
+  } else if (!/^[A-Z0-9]{2,10}$/.test(station.COUNTRY_CODE.trim())) {
+    warnings.push('Country code should be 2-10 alphanumeric characters');
   }
 
-  if (!station.NAME?.trim()) {
-    errors.push('Name is required');
-  } else if (station.NAME.trim().length < 2) {
-    warnings.push('Name should be at least 2 characters long');
+  if (!station.CITY_NAME?.trim()) {
+    errors.push('City name (CITY_NAME) is required');
+  } else if (station.CITY_NAME.trim().length < 2) {
+    warnings.push('City name should be at least 2 characters long');
   }
 
   // Coordinate validation
@@ -78,7 +79,7 @@ export function validateDutyStation(station: Partial<DutyStation>): ValidationRe
     const lat = Number(station.LATITUDE);
     const lng = Number(station.LONGITUDE);
     
-    if ((lat === 0 && lng === 0) && station.NAME !== 'Unknown') {
+    if ((lat === 0 && lng === 0) && station.CITY_NAME !== 'Unknown') {
       warnings.push('Coordinates (0,0) may indicate missing location data');
     }
   }
@@ -89,7 +90,7 @@ export function validateDutyStation(station: Partial<DutyStation>): ValidationRe
   }
 
   // Common name validation
-  if (station.COMMONNAME && station.COMMONNAME.trim().length < 2) {
+  if (station.CITY_COMMON_NAME && station.CITY_COMMON_NAME.trim().length < 2) {
     warnings.push('Common name should be at least 2 characters long if provided');
   }
 
@@ -106,15 +107,15 @@ export function validateCountry(country: Partial<Country>): ValidationResult {
   const warnings: string[] = [];
 
   // Required field validation
-  if (!country.CTYCD?.trim()) {
-    errors.push('Country code (CTYCD) is required');
-  } else if (!/^[A-Z]{2,3}$/.test(country.CTYCD.trim())) {
-    warnings.push('Country code should be 2-3 uppercase letters');
+  if (!country.COUNTRY_CODE?.trim()) {
+    errors.push('Country code (COUNTRY_CODE) is required');
+  } else if (!/^[A-Z0-9]{2,10}$/.test(country.COUNTRY_CODE.trim())) {
+    warnings.push('Country code should be 2-10 alphanumeric characters');
   }
 
-  if (!country.NAME?.trim()) {
-    errors.push('Country name is required');
-  } else if (country.NAME.trim().length < 2) {
+  if (!country.COUNTRY_NAME?.trim()) {
+    errors.push('Country name (COUNTRY_NAME) is required');
+  } else if (country.COUNTRY_NAME.trim().length < 2) {
     warnings.push('Country name should be at least 2 characters long');
   }
 
@@ -146,8 +147,8 @@ export function validateDutyStationsArray(stations: Partial<DutyStation>[]): Val
     });
 
     // Check for duplicate codes
-    if (station.DS?.trim()) {
-      const code = station.DS.trim();
+    if (station.CITY_CODE?.trim()) {
+      const code = station.CITY_CODE.trim();
       if (seenCodes.has(code)) {
         duplicateCodes.add(code);
       } else {
@@ -189,8 +190,8 @@ export function validateCountriesArray(countries: Partial<Country>[]): Validatio
     });
 
     // Check for duplicate codes
-    if (country.CTYCD?.trim()) {
-      const code = country.CTYCD.trim();
+    if (country.COUNTRY_CODE?.trim()) {
+      const code = country.COUNTRY_CODE.trim();
       if (seenCodes.has(code)) {
         duplicateCodes.add(code);
       } else {
@@ -258,13 +259,13 @@ export function validateDataConsistency(
   const warnings: string[] = [];
 
   // Create country code lookup
-  const countryCodesSet = new Set(countries.map(c => c.CTYCD));
+  const countryCodesSet = new Set(countries.map(c => c.COUNTRY_CODE));
 
   // Check if all duty station country codes exist in countries data
   const missingCountryCodes = new Set<string>();
   dutyStations.forEach(station => {
-    if (station.CTY && !countryCodesSet.has(station.CTY)) {
-      missingCountryCodes.add(station.CTY);
+    if (station.COUNTRY_CODE && !countryCodesSet.has(station.COUNTRY_CODE)) {
+      missingCountryCodes.add(station.COUNTRY_CODE);
     }
   });
 
@@ -273,8 +274,8 @@ export function validateDataConsistency(
   });
 
   // Check for countries with no duty stations
-  const usedCountryCodes = new Set(dutyStations.map(s => s.CTY));
-  const unusedCountries = countries.filter(c => !usedCountryCodes.has(c.CTYCD));
+  const usedCountryCodes = new Set(dutyStations.map(s => s.COUNTRY_CODE));
+  const unusedCountries = countries.filter(c => !usedCountryCodes.has(c.COUNTRY_CODE));
   
   if (unusedCountries.length > 0) {
     warnings.push(`${unusedCountries.length} countries have no associated duty stations`);

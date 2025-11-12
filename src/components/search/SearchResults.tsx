@@ -250,18 +250,18 @@ function SearchResults({
             {paginatedResults.map((result, index) => {
               const station = result.item;
               const hasCoordinates = station.LATITUDE !== 0 || station.LONGITUDE !== 0;
-              const uniqueKey = `${station.DS}-${station.CTY}-${index}`;
+              const uniqueKey = `${station.CITY_CODE}-${station.COUNTRY_CODE}-${index}`;
               
               return (
                 <TableRow key={uniqueKey} hover>
                   <TableCell>
                     <Typography variant="body2" fontFamily="monospace">
-                      {station.DS}
+                      {station.CITY_CODE}
                     </Typography>
                   </TableCell>
                   <TableCell>
                     <Typography variant="body2" fontWeight="medium">
-                      {renderHighlightedText(station.NAME, result.matches)}
+                      {renderHighlightedText(station.CITY_NAME, result.matches)}
                     </Typography>
                   </TableCell>
                   <TableCell>
@@ -271,7 +271,7 @@ function SearchResults({
                   </TableCell>
                   <TableCell>
                     <Typography variant="body2" color="text.secondary">
-                      {station.COMMONNAME ? renderHighlightedText(station.COMMONNAME, result.matches) : '-'}
+                      {station.CITY_COMMON_NAME ? renderHighlightedText(station.CITY_COMMON_NAME, result.matches) : '-'}
                     </Typography>
                   </TableCell>
                   <TableCell align="right">

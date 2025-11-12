@@ -114,7 +114,7 @@ function DutyStationsPage() {
   const handleExportExcelSelected = (rows: DutyStation[]) => exportDutyStationsToExcel(rows, 'duty-stations-selected');
 
   // Selection helpers
-  const getKey = (s: DutyStation, index?: number) => `${s.DS}-${s.CTY}${index !== undefined ? '-' + index : ''}`;
+  const getKey = (s: DutyStation, index?: number) => `${s.CITY_CODE}-${s.COUNTRY_CODE}${index !== undefined ? '-' + index : ''}`;
   const isSelected = (key: string) => selectedKeys.has(key);
   const clearSelection = () => setSelectedKeys(new Set());
   const toggleRow = (key: string) => {
@@ -281,8 +281,8 @@ function DutyStationsPage() {
                 {countries
                   .filter((country) => country.OBSOLETE !== '1')
                   .map((country) => (
-                    <MenuItem key={country.CTYCD} value={country.NAME}>
-                      {country.NAME}
+                    <MenuItem key={country.COUNTRY_CODE} value={country.COUNTRY_NAME}>
+                      {country.COUNTRY_NAME}
                     </MenuItem>
                   ))}
               </Select>
@@ -401,7 +401,7 @@ function DutyStationsPage() {
                 </TableRow>
               )}
               {!loading && paginatedResults.data.map((station, index) => {
-                const key = `${station.DS}-${station.CTY}-${index}`;
+                const key = `${station.CITY_CODE}-${station.COUNTRY_CODE}-${index}`;
                 const selected = isSelected(key);
                 return (
                 <TableRow key={key} hover selected={selected}>
@@ -409,17 +409,17 @@ function DutyStationsPage() {
                     <Checkbox
                       checked={selected}
                       onChange={() => toggleRow(key)}
-                      inputProps={{ 'aria-label': `select ${station.DS}` }}
+                      inputProps={{ 'aria-label': `select ${station.CITY_CODE}` }}
                     />
                   </TableCell>
                   <TableCell>
                     <Typography variant="body2" fontWeight="medium">
-                      {station.DS}
+                      {station.CITY_CODE}
                     </Typography>
                   </TableCell>
                   <TableCell>
                     <Typography variant="body2">
-                      {station.NAME}
+                      {station.CITY_NAME}
                     </Typography>
                   </TableCell>
                   <TableCell>
@@ -429,7 +429,7 @@ function DutyStationsPage() {
                   </TableCell>
                   <TableCell>
                     <Typography variant="body2" color="text.secondary">
-                      {station.COMMONNAME || '-'}
+                      {station.CITY_COMMON_NAME || '-'}
                     </Typography>
                   </TableCell>
                   <TableCell align="right">
@@ -454,7 +454,7 @@ function DutyStationsPage() {
                     <Tooltip title="View details">
                       <IconButton 
                         size="small" 
-                        onClick={() => navigate(`/duty-stations/${station.DS}/${station.CTY}`)}
+                        onClick={() => navigate(`/duty-stations/${station.CITY_CODE}/${station.COUNTRY_CODE}`)}
                         color="primary"
                       >
                         <ViewIcon />

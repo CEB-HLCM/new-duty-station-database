@@ -88,21 +88,21 @@ const MarkerClusterGroup = ({ stations, showClustering, onStationClick }: Marker
         // Create popup content (click marker to select station, use "View Details" button below map)
         const popupContent = `
           <div style="min-width: 200px; max-width: 300px;">
-            <h3 style="margin: 0 0 8px 0; font-size: 16px;">${station.NAME}</h3>
+            <h3 style="margin: 0 0 8px 0; font-size: 16px;">${station.CITY_NAME}</h3>
             <div style="margin-bottom: 8px;">
               <div style="font-size: 11px; color: #666; margin-bottom: 2px;">Code:</div>
-              <div style="font-size: 13px; font-weight: bold;">${station.DS}</div>
+              <div style="font-size: 13px; font-weight: bold;">${station.CITY_CODE}</div>
             </div>
             ${station.COUNTRY ? `
               <div style="margin-bottom: 8px;">
                 <div style="font-size: 11px; color: #666; margin-bottom: 2px;">Country:</div>
-                <div style="font-size: 13px;">${station.COUNTRY} (${station.CTY})</div>
+                <div style="font-size: 13px;">${station.COUNTRY} (${station.COUNTRY_CODE})</div>
               </div>
             ` : ''}
-            ${station.COMMONNAME && station.COMMONNAME !== station.NAME ? `
+            ${station.CITY_COMMON_NAME && station.CITY_COMMON_NAME !== station.CITY_NAME ? `
               <div style="margin-bottom: 8px;">
                 <div style="font-size: 11px; color: #666; margin-bottom: 2px;">Common Name:</div>
-                <div style="font-size: 13px;">${station.COMMONNAME}</div>
+                <div style="font-size: 13px;">${station.CITY_COMMON_NAME}</div>
               </div>
             ` : ''}
             <div style="margin-bottom: 8px;">
@@ -149,21 +149,21 @@ const MarkerClusterGroup = ({ stations, showClustering, onStationClick }: Marker
         
         const popupContent = `
           <div style="min-width: 200px; max-width: 300px;">
-            <h3 style="margin: 0 0 8px 0; font-size: 16px;">${station.NAME}</h3>
+            <h3 style="margin: 0 0 8px 0; font-size: 16px;">${station.CITY_NAME}</h3>
             <div style="margin-bottom: 8px;">
               <div style="font-size: 11px; color: #666; margin-bottom: 2px;">Code:</div>
-              <div style="font-size: 13px; font-weight: bold;">${station.DS}</div>
+              <div style="font-size: 13px; font-weight: bold;">${station.CITY_CODE}</div>
             </div>
             ${station.COUNTRY ? `
               <div style="margin-bottom: 8px;">
                 <div style="font-size: 11px; color: #666; margin-bottom: 2px;">Country:</div>
-                <div style="font-size: 13px;">${station.COUNTRY} (${station.CTY})</div>
+                <div style="font-size: 13px;">${station.COUNTRY} (${station.COUNTRY_CODE})</div>
               </div>
             ` : ''}
-            ${station.COMMONNAME && station.COMMONNAME !== station.NAME ? `
+            ${station.CITY_COMMON_NAME && station.CITY_COMMON_NAME !== station.CITY_NAME ? `
               <div style="margin-bottom: 8px;">
                 <div style="font-size: 11px; color: #666; margin-bottom: 2px;">Common Name:</div>
-                <div style="font-size: 13px;">${station.COMMONNAME}</div>
+                <div style="font-size: 13px;">${station.CITY_COMMON_NAME}</div>
               </div>
             ` : ''}
             <div style="margin-bottom: 8px;">

@@ -56,7 +56,7 @@ export const LocationMarker = ({ station, onClick }: LocationMarkerProps) => {
       <Popup>
         <Box sx={{ minWidth: 200, maxWidth: 300 }}>
           <Typography variant="h6" component="div" gutterBottom>
-            {station.NAME}
+            {station.CITY_NAME}
           </Typography>
           
           <Stack spacing={1}>
@@ -65,7 +65,7 @@ export const LocationMarker = ({ station, onClick }: LocationMarkerProps) => {
                 Code:
               </Typography>
               <Typography variant="body2" fontWeight="bold">
-                {station.DS}
+                {station.CITY_CODE}
               </Typography>
             </Box>
 
@@ -75,18 +75,18 @@ export const LocationMarker = ({ station, onClick }: LocationMarkerProps) => {
                   Country:
                 </Typography>
                 <Typography variant="body2">
-                  {station.COUNTRY} ({station.CTY})
+                  {station.COUNTRY} ({station.COUNTRY_CODE})
                 </Typography>
               </Box>
             )}
 
-            {station.COMMONNAME && station.COMMONNAME !== station.NAME && (
+            {station.CITY_COMMON_NAME && station.CITY_COMMON_NAME !== station.CITY_NAME && (
               <Box>
                 <Typography variant="caption" color="text.secondary">
                   Common Name:
                 </Typography>
                 <Typography variant="body2">
-                  {station.COMMONNAME}
+                  {station.CITY_COMMON_NAME}
                 </Typography>
               </Box>
             )}

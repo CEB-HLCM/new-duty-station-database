@@ -63,16 +63,17 @@ export async function fetchDutyStations(): Promise<DutyStation[]> {
     const rawData = parseCSV(csvText);
     
     // Transform raw CSV data to DutyStation interface
+    // Updated to use new CSV field names: CITY_CODE, CITY_NAME, CITY_COMMON_NAME, COUNTRY_CODE, COUNTRY_NAME
     const dutyStations: DutyStation[] = rawData.map(row => ({
-      DS: row.DS || '',
-      CTY: row.CTY || '',
-      NAME: row.NAME || '',
+      CITY_CODE: row.CITY_CODE || '',
+      COUNTRY_CODE: row.COUNTRY_CODE || '',
+      CITY_NAME: row.CITY_NAME || '',
       LATITUDE: parseFloat(row.LATITUDE?.replace(',', '.') || '0'),
       LONGITUDE: parseFloat(row.LONGITUDE?.replace(',', '.') || '0'),
-      COMMONNAME: row.COMMONNAME || '',
+      CITY_COMMON_NAME: row.CITY_COMMON_NAME || '',
       OBSOLETE: row.OBSOLETE || '0',
       REGION: row.REGION || '',
-      CLASS: row.CLASS || ''
+      // CLASS field removed - no longer in CSV
     }));
     
     // Return ALL stations including obsolete ones
@@ -104,9 +105,10 @@ export async function fetchCountries(): Promise<Country[]> {
     console.log('🔍 COUNTRIES CSV - First 3 rows:', rawData.slice(0, 3));
     
     // Transform raw CSV data to Country interface
+    // Updated to use new CSV field names: COUNTRY_CODE, COUNTRY_NAME
     const countries = rawData.map(row => ({
-      CTYCD: row.CTYCD || '',
-      NAME: row.NAME || '',
+      COUNTRY_CODE: row.COUNTRY_CODE || '',
+      COUNTRY_NAME: row.COUNTRY_NAME || '',
       REGION: row.REGION || '',
       ISO2: row.ISO2 || '',
       ISO3: row.ISO3 || '',
@@ -114,10 +116,10 @@ export async function fetchCountries(): Promise<Country[]> {
     }));
     
     // DEBUG: Log Eswatini/Swaziland entries specifically
-    const eswatiniEntries = countries.filter(c => c.CTYCD === '4030');
+    const eswatiniEntries = countries.filter(c => c.COUNTRY_CODE === '4030');
     console.log('🔍 ESWATINI/SWAZILAND ENTRIES:', eswatiniEntries);
     eswatiniEntries.forEach(entry => {
-      console.log(`   - ${entry.NAME}: OBSOLETE="${entry.OBSOLETE}" (type: ${typeof entry.OBSOLETE}, value: ${JSON.stringify(entry.OBSOLETE)})`);
+      console.log(`   - ${entry.COUNTRY_NAME}: OBSOLETE="${entry.OBSOLETE}" (type: ${typeof entry.OBSOLETE}, value: ${JSON.stringify(entry.OBSOLETE)})`);
     });
     
     return countries;
@@ -145,16 +147,16 @@ export async function fetchDutyStationsWithCountries(): Promise<DutyStation[]> {
     
     // First pass: add all non-obsolete countries
     countries.forEach(country => {
-      if (country.CTYCD === '4030') {
-        console.log(`🔍 Checking ${country.NAME}: OBSOLETE="${country.OBSOLETE}" (comparing !== '1': ${country.OBSOLETE !== '1'})`);
+      if (country.COUNTRY_CODE === '4030') {
+        console.log(`🔍 Checking ${country.COUNTRY_NAME}: OBSOLETE="${country.OBSOLETE}" (comparing !== '1': ${country.OBSOLETE !== '1'})`);
       }
       
       if (country.OBSOLETE !== '1') {
-        countryMap.set(country.CTYCD, country.NAME);
-        if (country.CTYCD === '4030') {
+        countryMap.set(country.COUNTRY_CODE, country.COUNTRY_NAME);
+        if (country.COUNTRY_CODE === '4030') {
           console.log('✅ Added NON-OBSOLETE:', country);
         }
-      } else if (country.CTYCD === '4030') {
+      } else if (country.COUNTRY_CODE === '4030') {
         console.log('❌ Skipped OBSOLETE:', country);
       }
     });
@@ -162,8 +164,8 @@ export async function fetchDutyStationsWithCountries(): Promise<DutyStation[]> {
     // Second pass: add obsolete countries only if no non-obsolete entry exists
     // This ensures backward compatibility for edge cases
     countries.forEach(country => {
-      if (country.OBSOLETE === '1' && !countryMap.has(country.CTYCD)) {
-        countryMap.set(country.CTYCD, country.NAME);
+      if (country.OBSOLETE === '1' && !countryMap.has(country.COUNTRY_CODE)) {
+        countryMap.set(country.COUNTRY_CODE, country.COUNTRY_NAME);
       }
     });
     
@@ -173,11 +175,11 @@ export async function fetchDutyStationsWithCountries(): Promise<DutyStation[]> {
     // Add country names to duty stations
     const enrichedDutyStations = dutyStations.map(station => ({
       ...station,
-      COUNTRY: countryMap.get(station.CTY) || 'N/A'
+      COUNTRY: countryMap.get(station.COUNTRY_CODE) || 'N/A'
     }));
     
     // Sort by name
-    enrichedDutyStations.sort((a, b) => a.NAME.localeCompare(b.NAME));
+    enrichedDutyStations.sort((a, b) => a.CITY_NAME.localeCompare(b.CITY_NAME));
     
     console.log(`Successfully loaded ${enrichedDutyStations.length} duty stations with country data`);
     return enrichedDutyStations;

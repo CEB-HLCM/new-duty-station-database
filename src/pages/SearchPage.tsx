@@ -81,7 +81,7 @@ function SearchPage() {
 
   // Handle view station - navigate to detail page
   const handleViewStation = (station: DutyStation) => {
-    navigate(`/duty-stations/${station.DS}/${station.CTY}`);
+    navigate(`/duty-stations/${station.CITY_CODE}/${station.COUNTRY_CODE}`);
   };
 
   // Handle export results

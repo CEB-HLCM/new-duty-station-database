@@ -19,13 +19,13 @@ export function useAppData() {
         filtered = filtered.filter(station => {
           switch (searchField) {
             case 'NAME':
-              return station.NAME.toLowerCase().includes(searchText);
+              return station.CITY_NAME.toLowerCase().includes(searchText);
             case 'COUNTRY':
               return station.COUNTRY?.toLowerCase().includes(searchText) || false;
             case 'COMMONNAME':
-              return station.COMMONNAME.toLowerCase().includes(searchText);
+              return station.CITY_COMMON_NAME.toLowerCase().includes(searchText);
             default:
-              return station.NAME.toLowerCase().includes(searchText);
+              return station.CITY_NAME.toLowerCase().includes(searchText);
           }
         });
       }
@@ -165,11 +165,11 @@ export function useAppData() {
   const validateDutyStation = (station: Partial<DutyStation>): string[] => {
     const errors: string[] = [];
     
-    if (!station.NAME?.trim()) {
+    if (!station.CITY_NAME?.trim()) {
       errors.push('Name is required');
     }
     
-    if (!station.CTY?.trim()) {
+    if (!station.COUNTRY_CODE?.trim()) {
       errors.push('Country code is required');
     }
     
@@ -187,7 +187,7 @@ export function useAppData() {
   // Check if duty station code exists
   const isDutyStationCodeExists = (code: string, excludeId?: string): boolean => {
     return dataContext.dutyStations.some(station => 
-      station.DS === code && station.DS !== excludeId
+      station.CITY_CODE === code && station.CITY_CODE !== excludeId
     );
   };
 

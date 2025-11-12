@@ -196,7 +196,7 @@ export function useSearch(options: UseSearchOptions = {}) {
     if (!isReady || !code.trim()) return null;
 
     const station = dutyStations.find(station => 
-      station.DS.toLowerCase() === code.toLowerCase().trim()
+      station.CITY_CODE.toLowerCase() === code.toLowerCase().trim()
     );
 
     return station || null;
@@ -238,8 +238,8 @@ export function useSearch(options: UseSearchOptions = {}) {
       ...countries
         .filter(country => country.OBSOLETE !== '1')
         .map(country => ({
-          value: country.NAME,
-          label: country.NAME,
+          value: country.COUNTRY_NAME,
+          label: country.COUNTRY_NAME,
         })),
     ];
   }, [countries]);
