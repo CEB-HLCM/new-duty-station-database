@@ -39,7 +39,6 @@ import { CountrySelector } from './CountrySelector';
 import { getUserPreferences, saveUserPreferences } from '../../services/userPreferencesService';
 import { useAppData } from '../../hooks/useAppData';
 import { searchDutyStations } from '../../services/searchService';
-import type { SearchFilters } from '../../types/dutyStation';
 import type { DutyStation } from '../../types/dutyStation';
 import type { RequestType as RequestTypeValue } from '../../types/request';
 import type { Country } from '../../types/dutyStation';
@@ -83,10 +82,10 @@ export const DutyStationForm: React.FC<DutyStationFormProps> = ({
   const stationSearchResults = useMemo(() => {
     if (!stationSearchQuery || stationSearchQuery.length < 2) return [];
     
-    const filters: SearchFilters = {
+    const filters = {
       query: stationSearchQuery,
-      searchType: 'partial',
-      fields: ['NAME', 'DS', 'COMMONNAME'],
+      searchType: 'partial' as const,
+      fields: ['CITY_NAME', 'CITY_CODE', 'CITY_COMMON_NAME'],
       countryFilter: '',
       showObsolete: true,
     };
@@ -132,6 +131,11 @@ export const DutyStationForm: React.FC<DutyStationFormProps> = ({
         form.setValue('dutyStationCode' as any, station.CITY_CODE);
         form.setValue('countryCode' as any, station.COUNTRY_CODE);
         form.setValue('stationName' as any, station.CITY_NAME);
+        form.setValue('currentData' as any, {
+          name: station.CITY_NAME,
+          country: station.COUNTRY || '',
+          commonName: station.CITY_COMMON_NAME || '',
+        });
         form.setValue('currentCoordinates' as any, {
           latitude: station.LATITUDE,
           longitude: station.LONGITUDE,
@@ -156,6 +160,7 @@ export const DutyStationForm: React.FC<DutyStationFormProps> = ({
       } else if (requestType === RequestType.COORDINATE_UPDATE) {
         form.setValue('dutyStationCode' as any, '');
         form.setValue('countryCode' as any, '');
+        form.setValue('currentData' as any, undefined);
         form.setValue('currentCoordinates' as any, { latitude: 0, longitude: 0 });
         form.setValue('proposedCoordinates' as any, { latitude: 0, longitude: 0 });
       }
@@ -269,7 +274,7 @@ export const DutyStationForm: React.FC<DutyStationFormProps> = ({
       currentData: undefined,
       proposedChanges: { name: '', commonName: '', coordinates: { latitude: 0, longitude: 0 } },
       proposedCoordinates: { latitude: 0, longitude: 0 },
-    } as Partial<DutyStationRequest>);
+    } as any);
     clearPersistedData();
     setSelectedCountry(null);
     setSelectedRegion(null);

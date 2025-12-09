@@ -14,15 +14,15 @@ export function useAppData() {
       // Apply search text filter
       if (filters.searchText && filters.searchText.trim()) {
         const searchText = filters.searchText.toLowerCase().trim();
-        const searchField = filters.searchField || 'NAME';
+        const searchField = filters.searchField || 'CITY_NAME';
 
         filtered = filtered.filter(station => {
           switch (searchField) {
-            case 'NAME':
+            case 'CITY_NAME':
               return station.CITY_NAME.toLowerCase().includes(searchText);
             case 'COUNTRY':
               return station.COUNTRY?.toLowerCase().includes(searchText) || false;
-            case 'COMMONNAME':
+            case 'CITY_COMMON_NAME':
               return station.CITY_COMMON_NAME.toLowerCase().includes(searchText);
             default:
               return station.CITY_NAME.toLowerCase().includes(searchText);
@@ -94,7 +94,7 @@ export function useAppData() {
 
   // Search duty stations by multiple criteria
   const searchDutyStations = useMemo(() => {
-    return (searchTerm: string, searchFields: Array<keyof DutyStation> = ['NAME', 'COUNTRY', 'COMMONNAME']) => {
+    return (searchTerm: string, searchFields: Array<keyof DutyStation> = ['CITY_NAME', 'COUNTRY', 'CITY_COMMON_NAME']) => {
       if (!searchTerm.trim()) {
         return dataContext.dutyStations;
       }

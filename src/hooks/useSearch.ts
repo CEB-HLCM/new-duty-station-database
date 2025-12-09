@@ -45,7 +45,7 @@ export function useSearch(options: UseSearchOptions = {}) {
   const [searchState, setSearchState] = useState<SearchState>({
     query: '',
     searchType: SearchType.PARTIAL,
-    fields: ['NAME', 'COMMONNAME', 'COUNTRY'],
+    fields: ['CITY_NAME', 'CITY_COMMON_NAME', 'COUNTRY'],
     countryFilter: 'all',
     showObsolete: false,
     results: [],
@@ -246,10 +246,10 @@ export function useSearch(options: UseSearchOptions = {}) {
 
   // Memoized search field options
   const fieldOptions = useMemo(() => [
-    { value: 'NAME', label: 'Station Name' },
-    { value: 'COMMONNAME', label: 'Common Name' },
+    { value: 'CITY_NAME', label: 'Station Name' },
+    { value: 'CITY_COMMON_NAME', label: 'Common Name' },
     { value: 'COUNTRY', label: 'Country' },
-    { value: 'CTY', label: 'Country Code' },
+    { value: 'COUNTRY_CODE', label: 'Country Code' },
   ], []);
 
   // Search type options

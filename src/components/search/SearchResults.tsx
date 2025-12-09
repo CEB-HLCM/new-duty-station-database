@@ -55,7 +55,7 @@ function SearchResults({
     performanceMetrics,
   } = searchHook;
 
-  const [sortField, setSortField] = useState<SortField>('NAME');
+  const [sortField, setSortField] = useState<SortField>('CITY_NAME');
   const [sortOrder, setSortOrder] = useState<SortOrder>('asc');
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(20);
@@ -206,18 +206,18 @@ function SearchResults({
             <TableRow>
               <TableCell>
                 <TableSortLabel
-                  active={sortField === 'DS'}
-                  direction={sortField === 'DS' ? sortOrder : 'asc'}
-                  onClick={() => handleSort('DS')}
+                  active={sortField === 'CITY_CODE'}
+                  direction={sortField === 'CITY_CODE' ? sortOrder : 'asc'}
+                  onClick={() => handleSort('CITY_CODE')}
                 >
                   Code
                 </TableSortLabel>
               </TableCell>
               <TableCell>
                 <TableSortLabel
-                  active={sortField === 'NAME'}
-                  direction={sortField === 'NAME' ? sortOrder : 'asc'}
-                  onClick={() => handleSort('NAME')}
+                  active={sortField === 'CITY_NAME'}
+                  direction={sortField === 'CITY_NAME' ? sortOrder : 'asc'}
+                  onClick={() => handleSort('CITY_NAME')}
                 >
                   Name
                 </TableSortLabel>
@@ -233,9 +233,9 @@ function SearchResults({
               </TableCell>
               <TableCell>
                 <TableSortLabel
-                  active={sortField === 'COMMONNAME'}
-                  direction={sortField === 'COMMONNAME' ? sortOrder : 'asc'}
-                  onClick={() => handleSort('COMMONNAME')}
+                  active={sortField === 'CITY_COMMON_NAME'}
+                  direction={sortField === 'CITY_COMMON_NAME' ? sortOrder : 'asc'}
+                  onClick={() => handleSort('CITY_COMMON_NAME')}
                 >
                   Common Name
                 </TableSortLabel>

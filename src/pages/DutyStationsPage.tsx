@@ -53,12 +53,12 @@ function DutyStationsPage() {
 
   // State for filters and pagination
   const [searchText, setSearchText] = useState('');
-  const [searchField, setSearchField] = useState<'NAME' | 'COUNTRY' | 'COMMONNAME'>('NAME');
+  const [searchField, setSearchField] = useState<'CITY_NAME' | 'COUNTRY' | 'CITY_COMMON_NAME'>('CITY_NAME');
   const [countryFilter, setCountryFilter] = useState<string>('all');
   const [showObsolete, setShowObsolete] = useState(false);
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(20);
-  const [sortBy, setSortBy] = useState<keyof DutyStation>('NAME');
+  const [sortBy, setSortBy] = useState<keyof DutyStation>('CITY_NAME');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
   const [selectedKeys, setSelectedKeys] = useState<Set<string>>(new Set());
 
@@ -263,9 +263,9 @@ function DutyStationsPage() {
                 onChange={(e) => setSearchField(e.target.value as typeof searchField)}
                 label="Search Field"
               >
-                <MenuItem value="NAME">Name</MenuItem>
+                <MenuItem value="CITY_NAME">Name</MenuItem>
                 <MenuItem value="COUNTRY">Country</MenuItem>
-                <MenuItem value="COMMONNAME">Common Name</MenuItem>
+                <MenuItem value="CITY_COMMON_NAME">Common Name</MenuItem>
               </Select>
             </FormControl>
           </Grid>
@@ -350,16 +350,16 @@ function DutyStationsPage() {
                   />
                 </TableCell>
                 <TableCell 
-                  sortDirection={sortBy === 'DS' ? sortOrder : false}
+                  sortDirection={sortBy === 'CITY_CODE' ? sortOrder : false}
                   sx={{ cursor: 'pointer' }}
-                  onClick={() => handleSort('DS')}
+                  onClick={() => handleSort('CITY_CODE')}
                 >
                   Code
                 </TableCell>
                 <TableCell 
-                  sortDirection={sortBy === 'NAME' ? sortOrder : false}
+                  sortDirection={sortBy === 'CITY_NAME' ? sortOrder : false}
                   sx={{ cursor: 'pointer' }}
-                  onClick={() => handleSort('NAME')}
+                  onClick={() => handleSort('CITY_NAME')}
                 >
                   Name
                 </TableCell>
@@ -371,9 +371,9 @@ function DutyStationsPage() {
                   Country
                 </TableCell>
                 <TableCell 
-                  sortDirection={sortBy === 'COMMONNAME' ? sortOrder : false}
+                  sortDirection={sortBy === 'CITY_COMMON_NAME' ? sortOrder : false}
                   sx={{ cursor: 'pointer' }}
-                  onClick={() => handleSort('COMMONNAME')}
+                  onClick={() => handleSort('CITY_COMMON_NAME')}
                 >
                   Common Name
                 </TableCell>

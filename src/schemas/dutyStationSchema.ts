@@ -131,6 +131,11 @@ export const coordinateUpdateSchema = baseRequestSchema.extend({
     .min(1, 'Country code is required')
     .max(10, 'Country code must be less than 10 characters'),
   stationName: z.string(),
+  currentData: z.object({
+    name: z.string(),
+    country: z.string(),
+    commonName: z.string().optional(),
+  }).optional(),
   currentCoordinates: coordinateSchema,
   proposedCoordinates: coordinateSchema,
 });

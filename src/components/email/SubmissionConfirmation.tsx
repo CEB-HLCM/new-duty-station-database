@@ -1,4 +1,5 @@
 // Submission confirmation dialog component
+import { useState } from 'react';
 import {
   Dialog,
   DialogTitle,

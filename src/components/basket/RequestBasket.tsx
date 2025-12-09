@@ -136,8 +136,8 @@ const SortableBasketItem: React.FC<{
       case RequestType.UPDATE:
         return {
           code: request.dutyStationCode || 'N/A',
-          name: request.stationName || 'N/A',
-          country: request.countryCode || 'N/A',
+          name: request.currentData?.name || 'N/A',
+          country: request.currentData?.country || request.countryCode || 'N/A',
           region: request.countryCode 
             ? getRegionFromCountryCode(request.countryCode, countries)
             : 'N/A',
@@ -154,8 +154,8 @@ const SortableBasketItem: React.FC<{
       case RequestType.COORDINATE_UPDATE:
         return {
           code: request.dutyStationCode || 'N/A',
-          name: request.stationName || 'N/A',
-          country: request.countryCode || 'N/A',
+          name: request.currentData?.name || request.stationName || 'N/A',
+          country: request.currentData?.country || request.countryCode || 'N/A',
           region: request.countryCode 
             ? getRegionFromCountryCode(request.countryCode, countries)
             : 'N/A',
