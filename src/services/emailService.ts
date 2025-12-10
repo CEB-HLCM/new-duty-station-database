@@ -429,8 +429,33 @@ const sendSingleBatch = async (
   countries: Country[]
 ): Promise<{ success: boolean; error?: string }> => {
   try {
+    // Validate that all items in batch have email addresses
+    const itemsWithoutEmail = batch.filter(item => !item.request.submittedBy || item.request.submittedBy.trim().length === 0);
+    
+    if (itemsWithoutEmail.length > 0) {
+      console.error('[EmailJS] Found items without email addresses:', itemsWithoutEmail.map(item => ({
+        id: item.id,
+        requestType: item.request.requestType,
+        email: item.request.submittedBy || '(empty)',
+      })));
+      
+      return {
+        success: false,
+        error: `Batch ${batchNumber}/${totalBatches} contains ${itemsWithoutEmail.length} item(s) without email address. Please ensure all requests have a valid email address.`,
+      };
+    }
+    
     // Get email address from first request (all requests in batch should have same submitter)
-    const emailAddress = batch[0]?.request.submittedBy || '';
+    const emailAddress = batch[0].request.submittedBy;
+    
+    // Verify all items have the same email address
+    const allSameEmail = batch.every(item => item.request.submittedBy === emailAddress);
+    if (!allSameEmail) {
+      console.warn('[EmailJS] Warning: Batch contains requests from different submitters. Using first email:', emailAddress);
+      console.warn('[EmailJS] Different emails found:', 
+        Array.from(new Set(batch.map(item => item.request.submittedBy)))
+      );
+    }
     
     // Format requests as HTML table for {{{requests}}} placeholder
     const requestsTable = formatRequestsAsHtmlTable(batch, countries);

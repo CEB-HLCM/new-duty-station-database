@@ -17,6 +17,7 @@ const generateId = (): string => {
 
 /**
  * Load basket from localStorage
+ * Validates items to ensure email addresses are present
  */
 export const loadBasket = (): BasketItem[] => {
   try {
@@ -24,8 +25,8 @@ export const loadBasket = (): BasketItem[] => {
     if (!stored) return [];
 
     const parsed = JSON.parse(stored);
-    // Convert date strings back to Date objects
-    return parsed.map((item: BasketItem) => ({
+    // Convert date strings back to Date objects and validate
+    const items = parsed.map((item: BasketItem) => ({
       ...item,
       addedAt: new Date(item.addedAt),
       request: {
@@ -33,6 +34,30 @@ export const loadBasket = (): BasketItem[] => {
         requestDate: new Date(item.request.requestDate),
       },
     }));
+    
+    // Filter out items with missing or invalid email addresses
+    const validItems = items.filter((item: BasketItem) => {
+      const email = item.request.submittedBy;
+      const isValid = email && email.trim().length > 0 && email.includes('@');
+      
+      if (!isValid) {
+        console.warn('[Basket] Removing invalid item from basket - missing email:', {
+          id: item.id,
+          requestType: item.request.requestType,
+          email: email || '(empty)',
+        });
+      }
+      
+      return isValid;
+    });
+    
+    // If we filtered out invalid items, save the cleaned basket
+    if (validItems.length !== items.length) {
+      console.log(`[Basket] Cleaned ${items.length - validItems.length} invalid items from basket`);
+      saveBasket(validItems);
+    }
+    
+    return validItems;
   } catch (error) {
     console.error('Error loading basket from localStorage:', error);
     return [];
@@ -243,6 +268,23 @@ export const submitBasket = async (items: BasketItem[]): Promise<SubmissionResul
         success: false,
         submittedAt: new Date(),
         errors: ['No items to submit'],
+      };
+    }
+
+    // Validate that all items have email addresses before submission
+    const itemsWithoutEmail = items.filter(
+      item => !item.request.submittedBy || item.request.submittedBy.trim().length === 0
+    );
+    
+    if (itemsWithoutEmail.length > 0) {
+      console.error('[Basket] Cannot submit - items missing email addresses:', itemsWithoutEmail);
+      return {
+        success: false,
+        submittedAt: new Date(),
+        errors: [
+          `${itemsWithoutEmail.length} request(s) are missing email addresses. ` +
+          'Please edit these requests to add your email address before submitting.',
+        ],
       };
     }
 
