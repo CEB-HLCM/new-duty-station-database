@@ -35,6 +35,7 @@ import { useAppData } from '../hooks/useAppData';
 import type { DutyStation } from '../types';
 import SelectionToolbar from '../components/table/SelectionToolbar';
 import { exportDutyStationsToCSV, exportDutyStationsToExcel } from '../utils/exportUtils';
+import { TableSkeleton, StatsCardSkeleton } from '../components/common/LoadingSkeleton';
 
 function DutyStationsPage() {
   const navigate = useNavigate();
@@ -141,14 +142,23 @@ function DutyStationsPage() {
   // Loading state
   if (loading && dutyStations.length === 0) {
     return (
-      <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
-        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
-          <CircularProgress size={48} />
-          <Typography variant="h6">Loading duty stations data...</Typography>
-          <Typography variant="body2" color="text.secondary">
-            Fetching data from GitHub HR-Public-Codes repository
-          </Typography>
-        </Box>
+      <Container maxWidth="xl" sx={{ mt: 2, mb: 4 }}>
+        <Typography variant="h4" gutterBottom sx={{ mb: 3 }}>
+          Duty Stations
+        </Typography>
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+          Loading duty stations data from GitHub HR-Public-Codes repository...
+        </Typography>
+        
+        {/* Statistics cards skeleton */}
+        <StatsCardSkeleton count={4} />
+        
+        <Box sx={{ mt: 4 }} />
+        
+        {/* Table skeleton */}
+        <Paper sx={{ p: 2 }}>
+          <TableSkeleton rows={20} columns={8} />
+        </Paper>
       </Container>
     );
   }

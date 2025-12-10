@@ -1,0 +1,169 @@
+/* Print-friendly styles for UN Duty Station Codes application */
+
+@media print {
+  /* Hide non-essential elements */
+  header,
+  nav,
+  .MuiDrawer-root,
+  .MuiBottomNavigation-root,
+  .MuiSpeedDial-root,
+  .MuiSnackbar-root,
+  .MuiDialog-root,
+  button:not(.print-include),
+  .no-print {
+    display: none !important;
+  }
+
+  /* Optimize layout for printing */
+  body {
+    margin: 0;
+    padding: 0;
+    background: white !important;
+    color: black !important;
+  }
+
+  /* Remove shadows and backgrounds */
+  .MuiPaper-root,
+  .MuiCard-root {
+    box-shadow: none !important;
+    border: 1px solid #ddd;
+  }
+
+  /* Optimize tables for printing */
+  table {
+    page-break-inside: avoid;
+    border-collapse: collapse;
+    width: 100%;
+  }
+
+  thead {
+    display: table-header-group;
+  }
+
+  tr,
+  img {
+    page-break-inside: avoid;
+  }
+
+  th,
+  td {
+    padding: 8px;
+    border: 1px solid #ddd;
+  }
+
+  th {
+    background-color: #f5f5f5 !important;
+    font-weight: bold;
+  }
+
+  /* Optimize links for print */
+  a[href]:after {
+    content: " (" attr(href) ")";
+    font-size: 0.8em;
+    color: #666;
+  }
+
+  /* Skip navigation links in print */
+  a[href^="#"]:after {
+    content: "";
+  }
+
+  /* Optimize map for printing */
+  .leaflet-container {
+    height: 400px !important;
+    page-break-inside: avoid;
+  }
+
+  /* Ensure content starts on a new page */
+  main,
+  #main-content {
+    padding-top: 0;
+  }
+
+  /* Typography optimizations */
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    page-break-after: avoid;
+    page-break-inside: avoid;
+    orphans: 3;
+    widows: 3;
+  }
+
+  /* Optimize pagination controls (hide) */
+  .MuiPagination-root,
+  .MuiTablePagination-root {
+    display: none !important;
+  }
+
+  /* Add print-specific header */
+  @page {
+    margin: 1.5cm;
+    size: A4;
+  }
+
+  /* Print title at top of page */
+  body::before {
+    content: "UN Duty Station Codes";
+    display: block;
+    font-size: 1.5em;
+    font-weight: bold;
+    margin-bottom: 1em;
+    text-align: center;
+    border-bottom: 2px solid #008fd5;
+    padding-bottom: 0.5em;
+  }
+
+  /* Optimize chip/badge display */
+  .MuiChip-root {
+    border: 1px solid #ddd;
+    background-color: white !important;
+  }
+
+  /* Expand collapsed content */
+  .MuiCollapse-root {
+    height: auto !important;
+    overflow: visible !important;
+  }
+
+  .MuiAccordion-root {
+    box-shadow: none !important;
+  }
+
+  /* Show all table rows (remove pagination effect) */
+  .MuiTableBody-root tr {
+    display: table-row !important;
+  }
+
+  /* Optimize form elements */
+  input,
+  select,
+  textarea {
+    border: 1px solid #ddd;
+    background: white;
+  }
+
+  /* Page numbers */
+  @page {
+    @bottom-right {
+      content: "Page " counter(page) " of " counter(pages);
+    }
+  }
+}
+
+/* Print button styling */
+@media screen {
+  .print-button {
+    display: inline-flex;
+  }
+}
+
+@media print {
+  .print-button {
+    display: none !important;
+  }
+}
+

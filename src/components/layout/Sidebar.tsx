@@ -50,6 +50,9 @@ function Sidebar({ open, onClose }: SidebarProps) {
       open={open}
       onClose={onClose}
       variant="temporary"
+      role="navigation"
+      aria-label="Main navigation"
+      id="navigation"
       sx={{
         '& .MuiDrawer-paper': {
           width: 280,
@@ -69,11 +72,12 @@ function Sidebar({ open, onClose }: SidebarProps) {
         backgroundColor: theme.palette.primary.main,
         color: theme.palette.primary.contrastText
       }}>
-        <Typography variant="h6" sx={{ fontWeight: 600, fontSize: '1rem' }}>
+        <Typography variant="h6" component="h2" sx={{ fontWeight: 600, fontSize: '1rem' }}>
           Navigation
         </Typography>
         <IconButton 
           onClick={onClose}
+          aria-label="Close navigation menu"
           sx={{ 
             color: theme.palette.primary.contrastText,
             '&:hover': {
@@ -88,16 +92,18 @@ function Sidebar({ open, onClose }: SidebarProps) {
       <Divider />
       
       {/* Menu Items */}
-      <List sx={{ pt: 1 }}>
+      <List sx={{ pt: 1 }} role="menu">
         {menuItems.map((item) => {
           const isSelected = location.pathname === item.path;
           
           return (
-            <ListItem key={item.text} disablePadding>
+            <ListItem key={item.text} disablePadding role="none">
               <ListItemButton
                 component={Link}
                 to={item.path}
                 onClick={onClose}
+                role="menuitem"
+                aria-current={isSelected ? 'page' : undefined}
                 selected={isSelected}
                 sx={{ 
                   mx: 1,

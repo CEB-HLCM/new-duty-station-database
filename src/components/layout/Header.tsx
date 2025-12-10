@@ -22,6 +22,8 @@ function Header({ onMenuClick, requestCount }: HeaderProps) {
     <AppBar 
       position="fixed" 
       elevation={4}
+      component="header"
+      role="banner"
       sx={{
         zIndex: (theme) => theme.zIndex.drawer + 1,
         backgroundColor: '#008fd5', // CEB primary blue
@@ -30,7 +32,8 @@ function Header({ onMenuClick, requestCount }: HeaderProps) {
       <Toolbar sx={{ minHeight: '64px !important' }}>
         <IconButton
           color="inherit"
-          aria-label="open drawer"
+          aria-label="Open navigation menu"
+          aria-expanded="false"
           onClick={onMenuClick}
           edge="start"
           sx={{ 
@@ -50,7 +53,8 @@ function Header({ onMenuClick, requestCount }: HeaderProps) {
           alignItems: 'center'
         }}>
           <Link 
-            to="/" 
+            to="/"
+            aria-label="UN Duty Station Codes - Go to homepage"
             style={{ 
               display: 'flex', 
               alignItems: 'center',
@@ -59,8 +63,9 @@ function Header({ onMenuClick, requestCount }: HeaderProps) {
             }}
           >
             <img 
-              alt="UN Logo" 
+              alt="United Nations Logo" 
               src="/assets/logo.svg" 
+              role="img"
               style={{ 
                 height: '3em'
               }} 
@@ -73,11 +78,13 @@ function Header({ onMenuClick, requestCount }: HeaderProps) {
           
           <Link 
             to="/requests-list"
-            title={`You have ${requestCount} pending request(s).`}
+            title={`You have ${requestCount} pending request${requestCount !== 1 ? 's' : ''}`}
+            aria-label={`View ${requestCount} pending request${requestCount !== 1 ? 's' : ''}`}
             style={{ textDecoration: 'none', color: 'inherit' }}
           >
             <IconButton 
-              color="inherit" 
+              color="inherit"
+              aria-label={`Requests list - ${requestCount} pending`} 
               aria-label="show requests"
               sx={{
                 '&:hover': {

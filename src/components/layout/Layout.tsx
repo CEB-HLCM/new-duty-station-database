@@ -4,6 +4,9 @@ import { Box, useTheme } from '@mui/material';
 import Header from './Header';
 import Sidebar from './Sidebar';
 import BottomNavbar from './BottomNavbar';
+import { SkipLinks } from './SkipLinks';
+import { KeyboardShortcutsDialog } from '../common/KeyboardShortcutsDialog';
+import { useKeyboardShortcuts } from '../../hooks/useKeyboardShortcuts';
 
 interface LayoutProps {
   children: ReactNode;
@@ -13,6 +16,9 @@ function Layout({ children }: LayoutProps) {
   const theme = useTheme();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [requestCount] = useState(0);
+
+  // Initialize global keyboard shortcuts
+  useKeyboardShortcuts({ enableGlobalShortcuts: true });
 
   const handleSidebarToggle = () => {
     setSidebarOpen(!sidebarOpen);
@@ -24,6 +30,12 @@ function Layout({ children }: LayoutProps) {
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+      {/* Skip links for keyboard navigation accessibility */}
+      <SkipLinks />
+      
+      {/* Keyboard shortcuts help dialog */}
+      <KeyboardShortcutsDialog />
+      
       <Header 
         onMenuClick={handleSidebarToggle}
         requestCount={requestCount}
@@ -34,9 +46,13 @@ function Layout({ children }: LayoutProps) {
         onClose={handleSidebarClose}
       />
       
-      {/* Main content area with proper spacing */}
+      {/* Main content area with proper spacing and accessibility attributes */}
       <Box 
-        component="main" 
+        component="main"
+        id="main-content"
+        role="main"
+        aria-label="Main content"
+        tabIndex={-1}
         sx={{
           flexGrow: 1,
           pt: '64px', // AppBar height
