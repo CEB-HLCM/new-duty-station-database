@@ -161,11 +161,11 @@ function MapsPage() {
   const obsoleteStations = dutyStations.filter(s => s.OBSOLETE === '1').length;
 
   return (
-    <Container maxWidth={false} disableGutters sx={{ height: 'calc(100vh - 64px)' }}>
+    <Container maxWidth={false} disableGutters sx={{ height: 'calc(100vh - 64px - 56px)' }}>
       <Box sx={{ p: 3, height: '100%', display: 'flex', flexDirection: 'column' }}>
         {/* Header */}
         <Box sx={{ mb: 2 }}>
-        <Typography variant="h4" component="h1" gutterBottom>
+          <Typography variant="h4" component="h1" gutterBottom>
             Interactive Map
           </Typography>
           <Typography variant="body2" color="text.secondary">

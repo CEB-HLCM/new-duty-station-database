@@ -110,8 +110,26 @@ const MarkerClusterGroup = ({ stations, showClustering, onStationClick }: Marker
               <div style="font-size: 12px; font-family: monospace;">${station.LATITUDE.toFixed(6)}, ${station.LONGITUDE.toFixed(6)}</div>
             </div>
             ${isObsolete ? '<div style="display: inline-block; padding: 2px 8px; background: #d32f2f; color: white; border-radius: 12px; font-size: 11px; margin-bottom: 8px;">Obsolete</div>' : ''}
-            <div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid #eee; font-size: 11px; color: #888;">
-              Click marker to view full details below map
+            <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid #eee;">
+              <button 
+                onclick="window.location.href='/duty-stations/${station.CITY_CODE}/${station.COUNTRY_CODE}'"
+                style="
+                  width: 100%;
+                  padding: 8px 16px;
+                  background: #1976d2;
+                  color: white;
+                  border: none;
+                  border-radius: 4px;
+                  font-size: 13px;
+                  font-weight: 500;
+                  cursor: pointer;
+                  transition: background 0.2s;
+                "
+                onmouseover="this.style.background='#1565c0'"
+                onmouseout="this.style.background='#1976d2'"
+              >
+                View Full Details
+              </button>
             </div>
           </div>
         `;
@@ -171,8 +189,26 @@ const MarkerClusterGroup = ({ stations, showClustering, onStationClick }: Marker
               <div style="font-size: 12px; font-family: monospace;">${station.LATITUDE.toFixed(6)}, ${station.LONGITUDE.toFixed(6)}</div>
             </div>
             ${isObsolete ? '<div style="display: inline-block; padding: 2px 8px; background: #d32f2f; color: white; border-radius: 12px; font-size: 11px; margin-bottom: 8px;">Obsolete</div>' : ''}
-            <div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid #eee; font-size: 11px; color: #888;">
-              Click marker to view full details below map
+            <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid #eee;">
+              <button 
+                onclick="window.location.href='/duty-stations/${station.CITY_CODE}/${station.COUNTRY_CODE}'"
+                style="
+                  width: 100%;
+                  padding: 8px 16px;
+                  background: #1976d2;
+                  color: white;
+                  border: none;
+                  border-radius: 4px;
+                  font-size: 13px;
+                  font-weight: 500;
+                  cursor: pointer;
+                  transition: background 0.2s;
+                "
+                onmouseover="this.style.background='#1565c0'"
+                onmouseout="this.style.background='#1976d2'"
+              >
+                View Full Details
+              </button>
             </div>
           </div>
         `;
