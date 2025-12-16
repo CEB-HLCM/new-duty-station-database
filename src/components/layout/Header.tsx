@@ -84,8 +84,7 @@ function Header({ onMenuClick, requestCount }: HeaderProps) {
           >
             <IconButton 
               color="inherit"
-              aria-label={`Requests list - ${requestCount} pending`} 
-              aria-label="show requests"
+              aria-label={`Requests list - ${requestCount} pending`}
               sx={{
                 '&:hover': {
                   backgroundColor: 'rgba(255, 255, 255, 0.1)'

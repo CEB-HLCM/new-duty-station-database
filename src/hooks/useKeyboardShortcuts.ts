@@ -14,7 +14,7 @@ export interface KeyboardShortcut {
 }
 
 interface UseKeyboardShortcutsOptions {
-  shortcuts: KeyboardShortcut[];
+  shortcuts?: KeyboardShortcut[];
   enableGlobalShortcuts?: boolean;
 }
 
