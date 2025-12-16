@@ -111,13 +111,12 @@ export const searchCitiesNominatim = async (
   }
 
   try {
-    const searchQuery = countryName
-      ? `${cityName}, ${countryName}`
-      : cityName;
-
-    const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(
-      searchQuery
-    )}&format=json&limit=10&addressdetails=1`;
+    // Search broadly first (without country constraint in query)
+    // Then filter by country in results - this allows partial matching
+    // "kin" can now match "Kingston" because we get broader results
+    const url = `https://nominatim.openstreetmap.org/search?` +
+      `q=${encodeURIComponent(cityName)}` +
+      `&format=json&limit=50&addressdetails=1`;
 
     const response = await fetch(url, {
       headers: {
@@ -135,13 +134,7 @@ export const searchCitiesNominatim = async (
 
     const data = await response.json();
 
-    console.log(`Nominatim raw response for "${cityName}, ${countryName}":`, data.length, 'results');
-    if (data.length > 0) {
-      console.log('Sample result:', data[0]);
-    }
-
     if (!Array.isArray(data) || data.length === 0) {
-      console.log('No results from Nominatim API');
       return [];
     }
 
@@ -152,13 +145,36 @@ export const searchCitiesNominatim = async (
 
     const filtered: CitySearchResultWithImportance[] = data
       .filter((result: any) => {
-        // Only include cities, towns, villages, and administrative areas
-        // Note: Some major cities like Paris are classified as 'administrative' in Nominatim
-        const validTypes = ['city', 'town', 'village', 'municipality', 'administrative', 'suburb', 'neighbourhood'];
+        // STEP 1: Filter by country if specified (strict matching)
+        if (countryName) {
+          const resultCountry = result.address?.country?.toLowerCase() || null;
+          const searchCountry = countryName.toLowerCase();
+          
+          // Reject if result has no country (e.g., "North Sea")
+          if (!resultCountry) {
+            return false;
+          }
+          
+          // Must match the country name (partial match for flexibility)
+          // e.g., "Jamaica" matches "jamaica" or "United States" matches "united states"
+          if (!resultCountry.includes(searchCountry) && !searchCountry.includes(resultCountry)) {
+            return false;
+          }
+        }
+        
+        // STEP 2: Include cities, towns, villages, capitals, and all settlement types
+        // Less restrictive filtering to catch capitals like Kingston and small towns like Junction
+        const validTypes = [
+          'city', 'town', 'village', 'municipality', 'administrative',
+          'suburb', 'neighbourhood', 'hamlet', 'locality',
+          'capital', 'state_capital', 'county_seat',  // Capital cities
+          'district', 'quarter', 'borough',  // Urban subdivisions
+          'settlement', 'populated_place'  // General settlements
+        ];
         const resultType = result.type?.toLowerCase() || '';
         const resultClass = result.class?.toLowerCase() || '';
         
-        // Accept if type is valid OR if it's a place/boundary
+        // Accept if type is valid OR if it's a place/boundary (less restrictive)
         return validTypes.includes(resultType) || resultClass === 'place' || resultClass === 'boundary';
       })
       .map((result: any): CitySearchResultWithImportance => {
@@ -183,8 +199,6 @@ export const searchCitiesNominatim = async (
           importance: importance,
         };
       });
-    
-    console.log(`Nominatim filtered results (before deduplication): ${filtered.length} cities/towns`);
     
     // Deduplicate by name and coordinate proximity (within ~5km = 0.05 degrees)
     const deduplicated = filtered.reduce((acc: CitySearchResultWithImportance[], current: CitySearchResultWithImportance) => {
@@ -220,7 +234,6 @@ export const searchCitiesNominatim = async (
     // Remove temporary importance field before returning
     const results = sorted.map(({ importance, ...rest }) => rest);
     
-    console.log(`Nominatim deduplicated results: ${results.length} unique cities/towns`);
     return results;
   } catch (error) {
     console.error('Error searching cities with Nominatim:', error);
