@@ -107,8 +107,7 @@ export function DataProvider({ children }: DataProviderProps) {
         payload: { dutyStations, countries },
       });
       
-      console.log(`DataContext: Loaded ${dutyStations.length} duty stations and ${countries.length} countries`);
-      console.log(`Sample country data:`, countries.slice(0, 3)); // Debug log
+      // Loaded duty stations and countries data successfully
       
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';

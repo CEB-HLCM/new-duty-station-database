@@ -355,11 +355,12 @@ export function measureSearchPerformance<T>(
   
   // Log performance metrics (only in development)
   if (import.meta.env.DEV) {
-    console.log(`Search Performance - ${searchType}:`, {
-      query,
-      duration: `${duration.toFixed(2)}ms`,
-      resultsCount: Array.isArray(result) ? result.length : 1,
-    });
+    // Search performance metrics
+    // console.debug(`Search Performance - ${searchType}:`, {
+    //   query,
+    //   duration: `${duration.toFixed(2)}ms`,
+    //   resultsCount: Array.isArray(result) ? result.length : 1,
+    // });
   }
   
   return { result, duration };

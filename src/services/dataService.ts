@@ -51,7 +51,7 @@ function parseCSV(csvText: string): Record<string, string>[] {
 // Fetch duty stations data
 export async function fetchDutyStations(): Promise<DutyStation[]> {
   try {
-    console.log('Fetching duty stations from:', DUTY_STATIONS_CSV_URL);
+    // Fetching duty stations from CSV
     
     const response = await fetch(DUTY_STATIONS_CSV_URL);
     
@@ -89,7 +89,7 @@ export async function fetchDutyStations(): Promise<DutyStation[]> {
 // Fetch countries data
 export async function fetchCountries(): Promise<Country[]> {
   try {
-    console.log('Fetching countries from:', COUNTRIES_CSV_URL);
+    // Fetching countries from CSV
     
     const response = await fetch(COUNTRIES_CSV_URL);
     
@@ -101,8 +101,9 @@ export async function fetchCountries(): Promise<Country[]> {
     const rawData = parseCSV(csvText);
     
     // DEBUG: Log the first few rows to see actual structure
-    console.log('🔍 COUNTRIES CSV - First row keys:', Object.keys(rawData[0]));
-    console.log('🔍 COUNTRIES CSV - First 3 rows:', rawData.slice(0, 3));
+    // Debug: Country CSV structure validation
+    // console.debug('COUNTRIES CSV - First row keys:', Object.keys(rawData[0]));
+    // console.debug('COUNTRIES CSV - First 3 rows:', rawData.slice(0, 3));
     
     // Transform raw CSV data to Country interface
     // Updated to use new CSV field names: COUNTRY_CODE, COUNTRY_NAME
@@ -117,10 +118,8 @@ export async function fetchCountries(): Promise<Country[]> {
     
     // DEBUG: Log Eswatini/Swaziland entries specifically
     const eswatiniEntries = countries.filter(c => c.COUNTRY_CODE === '4030');
-    console.log('🔍 ESWATINI/SWAZILAND ENTRIES:', eswatiniEntries);
-    eswatiniEntries.forEach(entry => {
-      console.log(`   - ${entry.COUNTRY_NAME}: OBSOLETE="${entry.OBSOLETE}" (type: ${typeof entry.OBSOLETE}, value: ${JSON.stringify(entry.OBSOLETE)})`);
-    });
+    // Debug: Eswatini/Swaziland obsolete status check
+    // console.debug('ESWATINI/SWAZILAND ENTRIES:', eswatiniEntries);
     
     return countries;
     
@@ -143,21 +142,12 @@ export async function fetchDutyStationsWithCountries(): Promise<DutyStation[]> {
     const countryMap = new Map<string, string>();
     
     // DEBUG: Log country filtering process
-    console.log('🔍 Building country map...');
+    // Building country map (excluding obsolete countries)
     
     // First pass: add all non-obsolete countries
     countries.forEach(country => {
-      if (country.COUNTRY_CODE === '4030') {
-        console.log(`🔍 Checking ${country.COUNTRY_NAME}: OBSOLETE="${country.OBSOLETE}" (comparing !== '1': ${country.OBSOLETE !== '1'})`);
-      }
-      
       if (country.OBSOLETE !== '1') {
         countryMap.set(country.COUNTRY_CODE, country.COUNTRY_NAME);
-        if (country.COUNTRY_CODE === '4030') {
-          console.log('✅ Added NON-OBSOLETE:', country);
-        }
-      } else if (country.COUNTRY_CODE === '4030') {
-        console.log('❌ Skipped OBSOLETE:', country);
       }
     });
     
@@ -170,7 +160,7 @@ export async function fetchDutyStationsWithCountries(): Promise<DutyStation[]> {
     });
     
     // DEBUG: Check what's in the map for code 4030
-    console.log('🔍 Country code 4030 maps to:', countryMap.get('4030'));
+    // Country map built successfully
     
     // Add country names to duty stations
     const enrichedDutyStations = dutyStations.map(station => ({
@@ -181,7 +171,7 @@ export async function fetchDutyStationsWithCountries(): Promise<DutyStation[]> {
     // Sort by name
     enrichedDutyStations.sort((a, b) => a.CITY_NAME.localeCompare(b.CITY_NAME));
     
-    console.log(`Successfully loaded ${enrichedDutyStations.length} duty stations with country data`);
+    // Successfully loaded duty stations with country data
     return enrichedDutyStations;
     
   } catch (error) {
@@ -232,10 +222,10 @@ export function setCachedData<T>(key: string, data: T, ttlMs: number = 5 * 60 * 
 export function clearCache(key?: string): void {
   if (key) {
     cache.delete(key);
-    console.log(`Cache cleared for key: ${key}`);
+    // Cache cleared for specific key
   } else {
     cache.clear();
-    console.log('All cache cleared');
+    // All cache cleared
   }
 }
 
@@ -251,11 +241,11 @@ export async function fetchDutyStationsWithCountriesCached(forceRefresh: boolean
   const cached = getCachedData<DutyStation[]>(cacheKey);
   
   if (cached) {
-    console.log('Using cached duty stations data');
+    // Using cached duty stations data
     return cached;
   }
   
-  console.log('Fetching fresh duty stations data...');
+  // Fetching fresh duty stations data
   const data = await fetchDutyStationsWithCountries();
   setCachedData(cacheKey, data);
   return data;

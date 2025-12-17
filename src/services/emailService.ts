@@ -472,15 +472,15 @@ const sendSingleBatch = async (
       json_snippet: csvSnippet, // {{{json_snippet}}} - CSV rows formatted with HTML entities
     };
 
-    // Debug logging to verify email is being passed
-    console.log('[EmailJS] Template params:', {
-      email: emailAddress,
-      emailLength: emailAddress.length,
-      requestsLength: requestsTable.length,
-      jsonSnippetLength: csvSnippet.length,
-      batchNumber,
-      totalBatches
-    });
+    // Debug: Template params prepared for email
+    // console.debug('[EmailJS] Template params:', {
+    //   email: emailAddress,
+    //   emailLength: emailAddress.length,
+    //   requestsLength: requestsTable.length,
+    //   jsonSnippetLength: csvSnippet.length,
+    //   batchNumber,
+    //   totalBatches
+    // });
 
     const response = await emailjs.send(
       EMAIL_CONFIG.serviceId,
@@ -536,7 +536,7 @@ export const sendBatchRequests = async (
     let countries: Country[] = [];
     try {
       countries = await fetchCountries();
-      console.log(`[EmailJS] Loaded ${countries.length} countries for email formatting`);
+      // Loaded countries for email formatting
     } catch (error) {
       console.warn('[EmailJS] Failed to fetch countries data, proceeding without country/region info:', error);
       // Continue without countries data - country/region will be empty

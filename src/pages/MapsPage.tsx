@@ -349,7 +349,7 @@ function MapsPage() {
                 enableCoordinatePicker={false}
                 onStationClick={(station) => {
                   setSelectedStation(station);
-                  console.log('Station clicked:', station);
+                  // Station clicked
                 }}
               />
 

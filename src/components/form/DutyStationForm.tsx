@@ -68,6 +68,7 @@ export const DutyStationForm: React.FC<DutyStationFormProps> = ({
   const [selectedRegion, setSelectedRegion] = useState<string | null>(null);
   const [selectedCountry, setSelectedCountry] = useState<Country | null>(null);
   const [cityValidated, setCityValidated] = useState(false);
+  const [manualCityEntry, setManualCityEntry] = useState(false); // Track if city was manually entered
   // Track original auto-populated coordinates
   const [originalCoordinates, setOriginalCoordinates] = useState<{ latitude: number; longitude: number } | null>(null);
   const [coordinatesManuallyChanged, setCoordinatesManuallyChanged] = useState(false);
@@ -283,6 +284,7 @@ export const DutyStationForm: React.FC<DutyStationFormProps> = ({
     // Reset coordinate tracking when request type changes
     setOriginalCoordinates(null);
     setCoordinatesManuallyChanged(false);
+    setManualCityEntry(false);
     // Reset station selection when request type changes
     setSelectedStation(null);
     setStationSearchQuery('');
@@ -305,6 +307,7 @@ export const DutyStationForm: React.FC<DutyStationFormProps> = ({
     // Reset coordinate tracking when country changes
     setOriginalCoordinates(null);
     setCoordinatesManuallyChanged(false);
+    setManualCityEntry(false);
   };
 
   const handleCitySelect = (city: CitySearchResult) => {
@@ -319,6 +322,7 @@ export const DutyStationForm: React.FC<DutyStationFormProps> = ({
       longitude: city.coordinates.longitude,
     });
     setCoordinatesManuallyChanged(false);
+    setManualCityEntry(false); // Not a manual entry
     
     // If country wasn't selected, auto-select it based on city result
     if (!selectedCountry && city.countryCode) {
@@ -330,6 +334,22 @@ export const DutyStationForm: React.FC<DutyStationFormProps> = ({
     setCityValidated(true);
     
     // Auto-show map for immediate visual verification
+    setShowMap(true);
+  };
+
+  const handleManualCityEntry = (cityName: string) => {
+    // User wants to manually enter city with map coordinates
+    form.setValue('name', cityName);
+    // Set default coordinates (will be updated via map)
+    form.setValue('coordinates.latitude', 0);
+    form.setValue('coordinates.longitude', 0);
+    
+    setManualCityEntry(true);
+    setCityValidated(true); // Allow form to proceed
+    setOriginalCoordinates(null); // No auto-populated coordinates
+    setCoordinatesManuallyChanged(false);
+    
+    // Force show map for coordinate selection
     setShowMap(true);
   };
 
@@ -349,6 +369,9 @@ export const DutyStationForm: React.FC<DutyStationFormProps> = ({
       setSelectedRegion(null);
       setCityValidated(false);
       setShowMap(false);
+      setManualCityEntry(false);
+      setOriginalCoordinates(null);
+      setCoordinatesManuallyChanged(false);
       // Reset station selection
       setSelectedStation(null);
       setStationSearchQuery('');
@@ -375,6 +398,11 @@ export const DutyStationForm: React.FC<DutyStationFormProps> = ({
           setCoordinatesManuallyChanged(true);
         }
       }
+      
+      // Don't auto-hide map in manual entry mode - let user verify coordinates
+      if (!manualCityEntry) {
+        setShowMap(false);
+      }
     } else if (requestType === RequestType.COORDINATE_UPDATE) {
       form.setValue('proposedCoordinates.latitude' as any, latitude);
       form.setValue('proposedCoordinates.longitude' as any, longitude);
@@ -382,7 +410,11 @@ export const DutyStationForm: React.FC<DutyStationFormProps> = ({
       form.setValue('proposedChanges.coordinates.latitude' as any, latitude);
       form.setValue('proposedChanges.coordinates.longitude' as any, longitude);
     }
-    setShowMap(false);
+    
+    // Don't auto-hide map for manual city entry to allow verification
+    if (!manualCityEntry || requestType !== RequestType.ADD) {
+      setShowMap(false);
+    }
   };
 
   // Reset coordinates to original auto-populated values
@@ -542,6 +574,7 @@ export const DutyStationForm: React.FC<DutyStationFormProps> = ({
                     </Alert>
                     <EnhancedCitySearch
                       onCitySelect={handleCitySelect}
+                      onManualEntry={handleManualCityEntry}
                       countryFilter={selectedCountry.ISO3 || selectedCountry.COUNTRY_CODE}
                       countryName={selectedCountry.COUNTRY_NAME}
                       label="City/Town Name *"
@@ -582,16 +615,22 @@ export const DutyStationForm: React.FC<DutyStationFormProps> = ({
                 {cityValidated && (
                   <Grid size={{ xs: 12 }}>
                     <Alert 
-                      severity={coordinatesManuallyChanged ? "warning" : "success"} 
+                      severity={manualCityEntry ? "warning" : (coordinatesManuallyChanged ? "warning" : "success")} 
                       sx={{ mb: 2 }}
                     >
                       <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                         <Box>
                           <Typography variant="subtitle2" gutterBottom>
-                            {coordinatesManuallyChanged ? '⚠️' : '✓'} <strong>Step 3:</strong> Location {coordinatesManuallyChanged ? 'Manually Adjusted' : 'Verified'}
+                            {manualCityEntry ? '📍' : (coordinatesManuallyChanged ? '⚠️' : '✓')} <strong>Step 3:</strong> {manualCityEntry ? 'Select Coordinates on Map' : (coordinatesManuallyChanged ? 'Location Manually Adjusted' : 'Location Verified')}
                           </Typography>
                           <Typography variant="caption">
-                            {coordinatesManuallyChanged ? (
+                            {manualCityEntry ? (
+                              <>
+                                <strong>Manual Entry Mode:</strong> The location "<strong>{form.watch('name')}</strong>" could not be automatically geocoded.
+                                <br />
+                                <strong>REQUIRED:</strong> Click on the map below to set the exact GPS coordinates for this location.
+                              </>
+                            ) : coordinatesManuallyChanged ? (
                               <>
                                 Coordinates have been manually adjusted from the original auto-populated values.
                                 Click the reset button to restore original coordinates.
@@ -637,14 +676,16 @@ export const DutyStationForm: React.FC<DutyStationFormProps> = ({
                               error={!!fieldState.error}
                               helperText={
                                 fieldState.error?.message || 
-                                (coordinatesManuallyChanged 
-                                  ? '⚠️ Manually adjusted' 
-                                  : '✓ Auto-populated from city search')
+                                (manualCityEntry 
+                                  ? (field.value === 0 ? '⚠️ Click map to set coordinates' : '✓ Set via map') 
+                                  : (coordinatesManuallyChanged 
+                                    ? '⚠️ Manually adjusted' 
+                                    : '✓ Auto-populated from city search'))
                               }
                               InputProps={{
-                                endAdornment: coordinatesManuallyChanged ? (
+                                endAdornment: (manualCityEntry || coordinatesManuallyChanged) ? (
                                   <Chip 
-                                    label="Modified" 
+                                    label={manualCityEntry ? "Manual" : "Modified"} 
                                     size="small" 
                                     color="warning" 
                                     sx={{ mr: 1 }}
@@ -673,14 +714,16 @@ export const DutyStationForm: React.FC<DutyStationFormProps> = ({
                               error={!!fieldState.error}
                               helperText={
                                 fieldState.error?.message || 
-                                (coordinatesManuallyChanged 
-                                  ? '⚠️ Manually adjusted' 
-                                  : '✓ Auto-populated from city search')
+                                (manualCityEntry 
+                                  ? (field.value === 0 ? '⚠️ Click map to set coordinates' : '✓ Set via map') 
+                                  : (coordinatesManuallyChanged 
+                                    ? '⚠️ Manually adjusted' 
+                                    : '✓ Auto-populated from city search'))
                               }
                               InputProps={{
-                                endAdornment: coordinatesManuallyChanged ? (
+                                endAdornment: (manualCityEntry || coordinatesManuallyChanged) ? (
                                   <Chip 
-                                    label="Modified" 
+                                    label={manualCityEntry ? "Manual" : "Modified"} 
                                     size="small" 
                                     color="warning" 
                                     sx={{ mr: 1 }}
@@ -693,15 +736,19 @@ export const DutyStationForm: React.FC<DutyStationFormProps> = ({
                       </Grid>
                     </Grid>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 1 }}>
-                      <Button
-                        variant="outlined"
-                        size="small"
-                        onClick={() => setShowMap(!showMap)}
-                      >
-                        {showMap ? '🔼 Hide Map' : '🔽 Show Map'}
-                      </Button>
+                      {!manualCityEntry && (
+                        <Button
+                          variant="outlined"
+                          size="small"
+                          onClick={() => setShowMap(!showMap)}
+                        >
+                          {showMap ? '🔼 Hide Map' : '🔽 Show Map'}
+                        </Button>
+                      )}
                       <Typography variant="caption" color="text.secondary">
-                        {showMap ? 'Click map to adjust location if needed' : 'Map auto-shows for verification'}
+                        {manualCityEntry 
+                          ? '⚠️ Map required for manual coordinate selection' 
+                          : (showMap ? 'Click map to adjust location if needed' : 'Map auto-shows for verification')}
                       </Typography>
                     </Box>
                   </Grid>
@@ -1113,7 +1160,7 @@ export const DutyStationForm: React.FC<DutyStationFormProps> = ({
             )}
 
             {/* Coordinate Picker Map - Only for ADD and COORDINATE_UPDATE (when not already shown) */}
-            {showMap && requestType === RequestType.ADD && (
+            {(showMap || manualCityEntry) && requestType === RequestType.ADD && (
               <Grid size={{ xs: 12 }}>
                 <Box sx={{ height: 400, border: 1, borderColor: 'divider', borderRadius: 1, overflow: 'hidden' }}>
                   <FormMapPicker

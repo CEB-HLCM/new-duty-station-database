@@ -9,6 +9,7 @@ import {
   Typography,
   Chip,
   Alert,
+  Button,
 } from '@mui/material';
 import {
   LocationOn as LocationIcon,
@@ -16,6 +17,8 @@ import {
   CheckCircle as CheckIcon,
   Warning as WarningIcon,
   Block as BlockIcon,
+  Edit as EditIcon,
+  Map as MapIcon,
 } from '@mui/icons-material';
 import { searchCitiesNominatim, type CitySearchResult } from '../../services/locationService';
 import { debounce } from '@mui/material/utils';
@@ -23,6 +26,7 @@ import { useAppData } from '../../hooks/useAppData';
 
 interface EnhancedCitySearchProps {
   onCitySelect: (result: CitySearchResult) => void;
+  onManualEntry?: (cityName: string) => void; // New callback for manual entry
   countryFilter?: string;
   countryName?: string;
   label?: string;
@@ -44,6 +48,7 @@ interface ExtendedCitySearchResult extends CitySearchResult {
  */
 export const EnhancedCitySearch: React.FC<EnhancedCitySearchProps> = ({
   onCitySelect,
+  onManualEntry,
   countryFilter,
   countryName,
   label = 'City/Town Name',
@@ -53,10 +58,13 @@ export const EnhancedCitySearch: React.FC<EnhancedCitySearchProps> = ({
 }) => {
   const { dutyStations } = useAppData(); // Access local database
   const [inputValue, setInputValue] = useState('');
+  const [lastSearchTerm, setLastSearchTerm] = useState(''); // Store the search term for manual entry
   const [options, setOptions] = useState<ExtendedCitySearchResult[]>([]);
   const [loading, setLoading] = useState(false);
   const [selectedCity, setSelectedCity] = useState<ExtendedCitySearchResult | null>(null);
   const [duplicateWarning, setDuplicateWarning] = useState<string | null>(null);
+  const [manualEntryMode, setManualEntryMode] = useState(false);
+  const [showNoResultsHelp, setShowNoResultsHelp] = useState(false);
 
   // HYBRID SEARCH: Local database first, then API for new cities
   const searchCities = useCallback(
@@ -64,9 +72,12 @@ export const EnhancedCitySearch: React.FC<EnhancedCitySearchProps> = ({
       if (!searchTerm || searchTerm.length < 2) {
         setOptions([]);
         setDuplicateWarning(null);
+        setShowNoResultsHelp(false);
         return;
       }
 
+      // Store search term for manual entry fallback
+      setLastSearchTerm(searchTerm);
       setLoading(true);
       const allResults: ExtendedCitySearchResult[] = [];
 
@@ -172,13 +183,18 @@ export const EnhancedCitySearch: React.FC<EnhancedCitySearchProps> = ({
           setDuplicateWarning(
             `All matching cities already exist in the database. Cannot request duplicates.`
           );
+          setShowNoResultsHelp(false);
         } else {
           setDuplicateWarning(null);
+          // Show help option if no results found after thorough search
+          setShowNoResultsHelp(searchTerm.length >= 3 && allResults.length === 0);
         }
 
       } catch (error) {
         console.error('City search error:', error);
         setOptions([]);
+        // Show help option on error too
+        setShowNoResultsHelp(searchTerm.length >= 3);
       } finally {
         setLoading(false);
       }
@@ -205,8 +221,27 @@ export const EnhancedCitySearch: React.FC<EnhancedCitySearchProps> = ({
       // Valid new city - proceed
       setSelectedCity(value);
       setDuplicateWarning(null);
+      setManualEntryMode(false);
       onCitySelect(value);
     }
+  };
+
+  // Handle manual entry mode activation
+  const handleManualEntry = () => {
+    console.log('[Manual Entry] Button clicked, lastSearchTerm:', lastSearchTerm, 'length:', lastSearchTerm?.length);
+    if (!onManualEntry) {
+      console.error('[Manual Entry] onManualEntry callback not provided!');
+      return;
+    }
+    if (!lastSearchTerm || lastSearchTerm.length < 2) {
+      console.error('[Manual Entry] Search term too short:', lastSearchTerm);
+      return;
+    }
+    
+    console.log('[Manual Entry] Activating manual mode for:', lastSearchTerm);
+    setManualEntryMode(true);
+    setShowNoResultsHelp(false);
+    onManualEntry(lastSearchTerm);
   };
 
   return (
@@ -363,6 +398,51 @@ export const EnhancedCitySearch: React.FC<EnhancedCitySearchProps> = ({
             {options.filter(o => !(o as ExtendedCitySearchResult).isDuplicate).length} new cities.
             <br />
             <strong>⚠️ You can only request NEW cities.</strong> Existing cities are blocked to prevent duplicates.
+          </Typography>
+        </Alert>
+      )}
+
+      {/* Manual Entry Option - shown when no results found */}
+      {showNoResultsHelp && !manualEntryMode && (
+        <Alert
+          severity="warning"
+          sx={{ mt: 1 }}
+          action={
+            <Button
+              color="inherit"
+              size="small"
+              startIcon={<MapIcon />}
+              onClick={handleManualEntry}
+            >
+              Enter Manually
+            </Button>
+          }
+        >
+          <Typography variant="subtitle2" gutterBottom>
+            <strong>Location Not Found</strong>
+          </Typography>
+          <Typography variant="caption">
+            The geocoding service couldn't find "<strong>{lastSearchTerm}</strong>". 
+            <br />
+            Click "Enter Manually" to proceed with manual coordinate selection on the map.
+          </Typography>
+        </Alert>
+      )}
+
+      {/* Manual Entry Mode Confirmation */}
+      {manualEntryMode && (
+        <Alert
+          severity="info"
+          sx={{ mt: 1 }}
+          icon={<EditIcon />}
+        >
+          <Typography variant="subtitle2" gutterBottom>
+            <strong>✓ Manual Entry Mode</strong>
+          </Typography>
+          <Typography variant="caption">
+            Location name: <strong>{lastSearchTerm}</strong>
+            <br />
+            Scroll down to select the exact coordinates on the map.
           </Typography>
         </Alert>
       )}

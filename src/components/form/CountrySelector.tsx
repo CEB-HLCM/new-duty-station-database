@@ -49,20 +49,10 @@ export const CountrySelector: React.FC<CountrySelectorProps> = ({
   const [selectedCountry, setSelectedCountry] = useState<Country | null>(null);
   const [region, setRegion] = useState<string | null>(selectedRegion || null);
 
-  // Debug log
-  console.log('CountrySelector - Total countries:', countries.length);
-  console.log('CountrySelector - Sample country:', countries[0]);
-  console.log('CountrySelector - Selected region:', region);
-
   // Filter countries by region and exclude obsolete countries
   const filteredCountries = region
     ? countries.filter((c: Country) => c.REGION === region && c.OBSOLETE !== '1')
     : countries.filter((c: Country) => c.OBSOLETE !== '1');
-
-  console.log('CountrySelector - Filtered countries:', filteredCountries.length);
-  if (region) {
-    console.log('CountrySelector - Sample filtered country:', filteredCountries[0]);
-  }
 
   // Sort countries alphabetically
   const sortedCountries = [...filteredCountries].sort((a, b) =>
