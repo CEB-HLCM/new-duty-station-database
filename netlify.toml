@@ -28,7 +28,10 @@
   for = "/*"
   [headers.values]
     # Security headers
-    X-Frame-Options = "DENY"
+    # Allow embedding in iframe on data.unsystem.org
+    X-Frame-Options = "ALLOW-FROM https://data.unsystem.org"
+    # Modern CSP frame-ancestors directive (preferred over X-Frame-Options)
+    Content-Security-Policy = "frame-ancestors 'self' https://data.unsystem.org https://*.unsystem.org"
     X-XSS-Protection = "1; mode=block"
     X-Content-Type-Options = "nosniff"
     Referrer-Policy = "strict-origin-when-cross-origin"
