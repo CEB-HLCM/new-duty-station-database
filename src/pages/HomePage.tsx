@@ -47,6 +47,44 @@ function HomePage() {
           UN Duty Station Codes
         </Typography>
         
+        {/* How To Use Section - from old app */}
+        <Box sx={{ mb: 4 }}>
+          <Link 
+            to="/help" 
+            style={{ 
+              textDecoration: 'none',
+              color: 'inherit'
+            }}
+          >
+            <Typography 
+              variant="h4" 
+              component="h2" 
+              gutterBottom
+              sx={{ 
+                color: 'primary.main',
+                '&:hover': {
+                  textDecoration: 'underline'
+                }
+              }}
+            >
+              How To Use
+            </Typography>
+            <Typography 
+              variant="h6" 
+              component="p" 
+              color="text.secondary"
+              sx={{ 
+                mb: 3,
+                '&:hover': {
+                  color: 'primary.main'
+                }
+              }}
+            >
+              Please access the video tutorial to learn how to search, view or request duty station codes.
+            </Typography>
+          </Link>
+        </Box>
+        
         <Grid container spacing={4} justifyContent="center">
           {navigationCards.map((card) => (
             <Grid
