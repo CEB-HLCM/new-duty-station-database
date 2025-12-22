@@ -20,7 +20,6 @@ import {
   List as ListIcon,
   Map as MapIcon,
   Help as HelpIcon,
-  Code as CodeIcon,
 } from '@mui/icons-material';
 import { Link, useLocation } from 'react-router-dom';
 
@@ -37,7 +36,6 @@ const menuItems = [
   { text: 'Requests', icon: <ListIcon />, path: '/requests-list' },
   { text: 'Maps', icon: <MapIcon />, path: '/maps' },
   { text: 'Help', icon: <HelpIcon />, path: '/help' },
-  { text: 'Code', icon: <CodeIcon />, path: '/code' },
 ];
 
 function Sidebar({ open, onClose }: SidebarProps) {

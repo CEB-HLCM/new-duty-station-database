@@ -13,7 +13,6 @@ import { DutyStationRequestPage } from './pages/DutyStationRequestPage';
 import { RequestsListPage } from './pages/RequestsListPage';
 import MapsPage from './pages/MapsPage';
 import HelpPage from './pages/HelpPage';
-import CodePage from './pages/CodePage';
 import { useEffect } from 'react';
 
 // Global styles to match CEB Donor Codes app exactly
@@ -90,7 +89,6 @@ function AppContent() {
             <Route path="/requests-list" element={<RequestsListPage />} />
             <Route path="/maps" element={<MapsPage />} />
             <Route path="/help" element={<HelpPage />} />
-            <Route path="/code" element={<CodePage />} />
           </Routes>
         </Layout>
       </Router>
