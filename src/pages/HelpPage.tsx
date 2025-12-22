@@ -46,6 +46,8 @@ function HelpPage() {
           <video 
             src="/videos/how_to_use.mp4" 
             controls
+            controlsList=""
+            playsInline
             style={{ 
               width: '100%',
               maxWidth: '800px',
