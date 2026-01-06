@@ -6,15 +6,15 @@ import type { Country } from '../types/dutyStation';
 import { fetchCountries } from './dataService';
 
 /**
- * EmailJS configuration
- * These should be set in environment variables
- * Default values from old codebase for backward compatibility
- * Note: Old codebase uses 'template_7tyy0w9' and 'b-W03p-FeqGlLK92_' in actual send
+ * EmailJS configuration - Using environment variables for security
+ * Note: Public key, service ID, and template ID are safe to expose in client-side code
+ * as per EmailJS design. Private key is used for additional verification.
  */
 const EMAIL_CONFIG = {
-  serviceId: import.meta.env.VITE_EMAILJS_SERVICE_ID || 'add_new_duty_station',
-  templateId: import.meta.env.VITE_EMAILJS_TEMPLATE_ID || 'template_7tyy0w9',
-  publicKey: import.meta.env.VITE_EMAILJS_PUBLIC_KEY || 'b-W03p-FeqGlLK92_',
+  publicKey: import.meta.env.VITE_EMAILJS_PUBLIC_KEY,
+  privateKey: import.meta.env.VITE_EMAILJS_PRIVATE_KEY, // Used for additional security, not authentication
+  serviceId: import.meta.env.VITE_EMAILJS_SERVICE_ID,
+  templateId: import.meta.env.VITE_EMAILJS_TEMPLATE_ID,
 };
 
 /**
@@ -31,13 +31,20 @@ const EMAIL_SEND_DELAY = 2000;
 
 /**
  * Initialize EmailJS with public key
+ * Throws error if required environment variables are not configured
  */
 export const initializeEmailJS = (): void => {
-  if (EMAIL_CONFIG.publicKey) {
-    emailjs.init(EMAIL_CONFIG.publicKey);
-  } else {
-    console.warn('EmailJS public key not configured. Email submission will be simulated.');
+  // Validate environment variables are loaded
+  if (!EMAIL_CONFIG.publicKey || !EMAIL_CONFIG.serviceId || !EMAIL_CONFIG.templateId) {
+    const missing = [];
+    if (!EMAIL_CONFIG.publicKey) missing.push('VITE_EMAILJS_PUBLIC_KEY');
+    if (!EMAIL_CONFIG.serviceId) missing.push('VITE_EMAILJS_SERVICE_ID');
+    if (!EMAIL_CONFIG.templateId) missing.push('VITE_EMAILJS_TEMPLATE_ID');
+    
+    throw new Error(`EmailJS environment variables not configured: ${missing.join(', ')}. Set these in your .env file or deployment environment variables.`);
   }
+
+  emailjs.init(EMAIL_CONFIG.publicKey);
 };
 
 /**
@@ -358,11 +365,11 @@ const formatRequestsAsCsv = (items: BasketItem[], countries: Country[]): string 
 export const sendSingleRequest = async (
   item: BasketItem
 ): Promise<{ success: boolean; error?: string }> => {
-  // If no public key configured, simulate email sending
-  if (!EMAIL_CONFIG.publicKey) {
-    console.log('[EmailJS Simulation] Would send email:', item);
+  // Validate configuration before sending
+  if (!isEmailConfigured()) {
     return {
-      success: true,
+      success: false,
+      error: 'Email service not configured. Please contact the administrator.',
     };
   }
 
@@ -522,12 +529,12 @@ export const sendBatchRequests = async (
     };
   }
 
-  // If no public key configured, simulate email sending
-  if (!EMAIL_CONFIG.publicKey) {
-    console.log('[EmailJS Simulation] Would send batch email with items:', items.length);
+  // Validate configuration before sending
+  if (!isEmailConfigured()) {
     return {
-      success: true,
+      success: false,
       submittedAt: new Date(),
+      errors: ['Email service not configured. Please contact the administrator.'],
     };
   }
 
