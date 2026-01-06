@@ -311,3 +311,5 @@ export const WCAG_COMPLIANCE_STATUS = {
   notes: 'WCAG 2.1 AA compliance achieved. Minor enhancements may be added for AAA level.',
 };
 
+
+
