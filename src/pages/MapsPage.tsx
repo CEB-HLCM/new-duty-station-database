@@ -171,6 +171,9 @@ function MapsPage() {
           <Typography variant="body2" color="text.secondary">
             Explore {dutyStations.length.toLocaleString()} UN Duty Stations worldwide
           </Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+            This map uses OpenStreetMap data for visualization purposes only and does not reflect official United Nations boundaries, names, or positions on the legal status of any territory or area.
+          </Typography>
         </Box>
 
         {/* Error Alert */}
