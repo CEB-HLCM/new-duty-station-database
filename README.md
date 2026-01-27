@@ -394,8 +394,24 @@ This project is developed for the UN CEB (United Nations System Chief Executives
 ---
 
 **Status**: ✅ LIVE IN PRODUCTION | 🚀 Phases 1-8 Complete | ✅ Overall 93% Complete  
-**Last Updated**: December 22, 2025 (Session 19 - Help Page Video)  
+**Last Updated**: January 27, 2026 (Bug Fix - Justification Field in Emails)  
 **Production URL**: Deployed on Netlify with automated builds
+
+## 🐛 Recent Bug Fix - Justification Field Missing from Emails (January 27, 2026)
+
+**Issue Resolved**: The mandatory Justification field was being captured in the form but was not included in the batch emails sent to the CEB IT Team.
+
+**Root Cause**: The email formatting functions (`formatRequestsAsHtmlTable` and `formatRequestsAsCsv` in `emailService.ts`) were only including location data (codes, names, coordinates) but omitted the justification field.
+
+**Solution Implemented**:
+1. ✅ **HTML Table Updated** - Added REQUEST_TYPE and JUSTIFICATION columns to email table
+2. ✅ **CSV Format Updated** - Added JUSTIFICATION column to CSV output
+3. ✅ **Instructions Enhanced** - Justification now included in UPDATE/REMOVE/COORDINATE_UPDATE instructions
+4. ✅ **Table Layout Optimized** - Adjusted column widths to accommodate all fields (table width 80% → 100%)
+
+**Impact**: CEB IT Team now receives complete request information including user justifications for all submission types.
+
+**File Modified**: `src/services/emailService.ts`
 
 ## 🎯 Session 19 Achievements - Help Page with Tutorial Video
 

@@ -154,7 +154,7 @@ const formatRequestDetails = (request: DutyStationRequest): string => {
 
 /**
  * Format requests as HTML table for email template {{{requests}}} placeholder
- * Uses new field names: CITY_CODE, COUNTRY_CODE, CITY_NAME, COUNTRY_NAME, REGION, LATITUDE, LONGITUDE
+ * Uses new field names: CITY_CODE, COUNTRY_CODE, CITY_NAME, COUNTRY_NAME, REGION, LATITUDE, LONGITUDE, JUSTIFICATION
  */
 const formatRequestsAsHtmlTable = (items: BasketItem[], countries: Country[]): string => {
   // Create country lookup map for country name and region
@@ -166,22 +166,25 @@ const formatRequestsAsHtmlTable = (items: BasketItem[], countries: Country[]): s
     });
   });
 
-  let emailTable = `<table style="border-collapse: collapse; width: 80%; height: 18px;" border="1">
+  let emailTable = `<table style="border-collapse: collapse; width: 100%; height: 18px;" border="1">
     <tbody>
     <tr style="height: 18px;">
-    <td style="width: 14%; height: 18px;"><strong>CITY_CODE</strong></td>
-    <td style="width: 14%; height: 18px;"><strong>COUNTRY_CODE</strong></td>
-    <td style="width: 14%; height: 18px;"><strong>CITY_NAME</strong></td>
-    <td style="width: 14%; height: 18px;"><strong>COUNTRY_NAME</strong></td>
-    <td style="width: 14%; height: 18px;"><strong>REGION</strong></td>
-    <td style="width: 14%; height: 18px;"><strong>LATITUDE</strong></td>
-    <td style="width: 14%; height: 18px;"><strong>LONGITUDE</strong></td>
+    <td style="width: 10%; height: 18px;"><strong>REQUEST_TYPE</strong></td>
+    <td style="width: 10%; height: 18px;"><strong>CITY_CODE</strong></td>
+    <td style="width: 10%; height: 18px;"><strong>COUNTRY_CODE</strong></td>
+    <td style="width: 12%; height: 18px;"><strong>CITY_NAME</strong></td>
+    <td style="width: 10%; height: 18px;"><strong>COUNTRY_NAME</strong></td>
+    <td style="width: 8%; height: 18px;"><strong>REGION</strong></td>
+    <td style="width: 8%; height: 18px;"><strong>LATITUDE</strong></td>
+    <td style="width: 8%; height: 18px;"><strong>LONGITUDE</strong></td>
+    <td style="width: 24%; height: 18px;"><strong>JUSTIFICATION</strong></td>
     </tr>`;
 
   items.forEach((item) => {
     const request = item.request;
     
     // Extract values based on request type
+    let requestType = formatRequestType(request.requestType);
     let dsCode = '';
     let countryCode = '';
     let cityName = '';
@@ -189,6 +192,7 @@ const formatRequestsAsHtmlTable = (items: BasketItem[], countries: Country[]): s
     let region = '';
     let latitude = '';
     let longitude = '';
+    let justification = request.justification || '';
 
     switch (request.requestType) {
       case 'add':
@@ -253,13 +257,15 @@ const formatRequestsAsHtmlTable = (items: BasketItem[], countries: Country[]): s
     }
 
     emailTable += `<tr style="height: 18px;">
-      <td style="width: 14%; height: 18px;">${dsCode}</td>
-      <td style="width: 14%; height: 18px;">${countryCode}</td>
-      <td style="width: 14%; height: 18px;">${cityName}</td>
-      <td style="width: 14%; height: 18px;">${countryName}</td>
-      <td style="width: 14%; height: 18px;">${region}</td>
-      <td style="width: 14%; height: 18px;">${latitude}</td>
-      <td style="width: 14%; height: 18px;">${longitude}</td>
+      <td style="width: 10%; height: 18px;">${requestType}</td>
+      <td style="width: 10%; height: 18px;">${dsCode}</td>
+      <td style="width: 10%; height: 18px;">${countryCode}</td>
+      <td style="width: 12%; height: 18px;">${cityName}</td>
+      <td style="width: 10%; height: 18px;">${countryName}</td>
+      <td style="width: 8%; height: 18px;">${region}</td>
+      <td style="width: 8%; height: 18px;">${latitude}</td>
+      <td style="width: 8%; height: 18px;">${longitude}</td>
+      <td style="width: 24%; height: 18px;">${justification}</td>
       </tr>`;
   });
 
@@ -272,6 +278,7 @@ const formatRequestsAsHtmlTable = (items: BasketItem[], countries: Country[]): s
 /**
  * Format requests as CSV rows for email template {{{json_snippet}}} placeholder
  * Includes CSV rows for ADD requests and instructions for other request types
+ * Now includes JUSTIFICATION field
  */
 const formatRequestsAsCsv = (items: BasketItem[], countries: Country[]): string => {
   // Create country lookup map for country name and region
@@ -287,10 +294,11 @@ const formatRequestsAsCsv = (items: BasketItem[], countries: Country[]): string 
 
   items.forEach((item) => {
     const request = item.request;
+    const justification = request.justification || '';
 
     switch (request.requestType) {
       case 'add':
-        // Format as CSV row: CITY_CODE,COUNTRY_CODE,CITY_NAME,COUNTRY_NAME,REGION,LATITUDE,LONGITUDE,COMMON_NAME
+        // Format as CSV row: CITY_CODE,COUNTRY_CODE,CITY_NAME,COUNTRY_NAME,REGION,LATITUDE,LONGITUDE,COMMON_NAME,JUSTIFICATION
         const dsCode = ('proposedCode' in request && request.proposedCode) ? request.proposedCode : '';
         const countryCode = ('countryCode' in request && request.countryCode) ? request.countryCode : '';
         const cityName = ('name' in request && request.name) ? request.name : '';
@@ -304,22 +312,22 @@ const formatRequestsAsCsv = (items: BasketItem[], countries: Country[]): string 
         const countryName = csvAddCountryInfo?.name || (('country' in request && request.country) ? request.country : '');
         const region = csvAddCountryInfo?.region || '';
         
-        // CSV format: CITY_CODE,COUNTRY_CODE,CITY_NAME,COUNTRY_NAME,REGION,LATITUDE,LONGITUDE,COMMON_NAME
-        csvRows.push(`${dsCode},${countryCode},"${cityName}","${countryName}",${region},${lat},${lng},"${commonName}"`);
+        // CSV format: CITY_CODE,COUNTRY_CODE,CITY_NAME,COUNTRY_NAME,REGION,LATITUDE,LONGITUDE,COMMON_NAME,JUSTIFICATION
+        csvRows.push(`${dsCode},${countryCode},"${cityName}","${countryName}",${region},${lat},${lng},"${commonName}","${justification}"`);
         break;
 
       case 'update':
         // Instructions for UPDATE requests
         const updateDsCode = ('dutyStationCode' in request && request.dutyStationCode) ? request.dutyStationCode : '';
         const updateCountryCode = ('countryCode' in request && request.countryCode) ? request.countryCode : '';
-        instructions.push(`UPDATE: Duty Station ${updateDsCode} (${updateCountryCode}) - See request details above for fields to update`);
+        instructions.push(`UPDATE: Duty Station ${updateDsCode} (${updateCountryCode}) - See request details above for fields to update. JUSTIFICATION: ${justification}`);
         break;
 
       case 'remove':
         // Instructions for REMOVE requests
         const removeDsCode = ('dutyStationCode' in request && request.dutyStationCode) ? request.dutyStationCode : '';
         const removeCountryCode = ('countryCode' in request && request.countryCode) ? request.countryCode : '';
-        instructions.push(`REMOVE: Duty Station ${removeDsCode} (${removeCountryCode}) - Mark as OBSOLETE=1 in CSV`);
+        instructions.push(`REMOVE: Duty Station ${removeDsCode} (${removeCountryCode}) - Mark as OBSOLETE=1 in CSV. JUSTIFICATION: ${justification}`);
         break;
 
       case 'coordinate_update':
@@ -330,16 +338,16 @@ const formatRequestsAsCsv = (items: BasketItem[], countries: Country[]): string 
           ? String(request.proposedCoordinates.latitude) : '';
         const newLng = ('proposedCoordinates' in request && request.proposedCoordinates?.longitude !== undefined) 
           ? String(request.proposedCoordinates.longitude) : '';
-        instructions.push(`COORDINATE UPDATE: Duty Station ${coordDsCode} (${coordCountryCode}) - Update LATITUDE=${newLat}, LONGITUDE=${newLng}`);
+        instructions.push(`COORDINATE UPDATE: Duty Station ${coordDsCode} (${coordCountryCode}) - Update LATITUDE=${newLat}, LONGITUDE=${newLng}. JUSTIFICATION: ${justification}`);
         break;
     }
   });
 
   let csvSnippet = '';
   
-  // Add CSV header
+  // Add CSV header (now includes JUSTIFICATION)
   if (csvRows.length > 0) {
-    csvSnippet += 'CITY_CODE,COUNTRY_CODE,CITY_NAME,COUNTRY_NAME,REGION,LATITUDE,LONGITUDE,COMMON_NAME\n';
+    csvSnippet += 'CITY_CODE,COUNTRY_CODE,CITY_NAME,COUNTRY_NAME,REGION,LATITUDE,LONGITUDE,COMMON_NAME,JUSTIFICATION\n';
     csvSnippet += csvRows.join('\n');
   }
 
