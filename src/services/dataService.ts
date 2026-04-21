@@ -111,6 +111,7 @@ export async function fetchCountries(): Promise<Country[]> {
       COUNTRY_CODE: row.COUNTRY_CODE || '',
       COUNTRY_NAME: row.COUNTRY_NAME || '',
       REGION: row.REGION || '',
+      SUBREGION: row.SUBREGION || '',
       ISO2: row.ISO2 || '',
       ISO3: row.ISO3 || '',
       OBSOLETE: row.OBSOLETE || '0'

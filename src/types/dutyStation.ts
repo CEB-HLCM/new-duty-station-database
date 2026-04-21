@@ -18,6 +18,7 @@ export interface Country {
   COUNTRY_CODE: string;        // Country Code (formerly CTYCD)
   COUNTRY_NAME: string;        // Country Name (formerly NAME)
   REGION?: string;             // Geographic region (Africa, Asia, Europe, Americas, Oceania)
+  SUBREGION?: string;          // Geographic sub-region (e.g., Southern Asia, Northern Europe)
   ISO2?: string;               // ISO 2-letter country code
   ISO3?: string;               // ISO 3-letter country code
   OBSOLETE?: string;           // Obsolete flag ("0" or "1")

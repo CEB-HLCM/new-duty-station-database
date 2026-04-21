@@ -157,27 +157,29 @@ const formatRequestDetails = (request: DutyStationRequest): string => {
  * Uses new field names: CITY_CODE, COUNTRY_CODE, CITY_NAME, COUNTRY_NAME, REGION, LATITUDE, LONGITUDE, JUSTIFICATION
  */
 const formatRequestsAsHtmlTable = (items: BasketItem[], countries: Country[]): string => {
-  // Create country lookup map for country name and region
-  const countryMap = new Map<string, { name: string; region: string }>();
+  // Create country lookup map for country name, region, and subregion
+  const countryMap = new Map<string, { name: string; region: string; subregion: string }>();
   countries.forEach(country => {
     countryMap.set(country.COUNTRY_CODE, {
       name: country.COUNTRY_NAME,
-      region: country.REGION || ''
+      region: country.REGION || '',
+      subregion: country.SUBREGION || ''
     });
   });
 
   let emailTable = `<table style="border-collapse: collapse; width: 100%; height: 18px;" border="1">
     <tbody>
     <tr style="height: 18px;">
-    <td style="width: 10%; height: 18px;"><strong>REQUEST_TYPE</strong></td>
-    <td style="width: 10%; height: 18px;"><strong>CITY_CODE</strong></td>
-    <td style="width: 10%; height: 18px;"><strong>COUNTRY_CODE</strong></td>
-    <td style="width: 12%; height: 18px;"><strong>CITY_NAME</strong></td>
+    <td style="width: 8%; height: 18px;"><strong>REQUEST_TYPE</strong></td>
+    <td style="width: 8%; height: 18px;"><strong>CITY_CODE</strong></td>
+    <td style="width: 8%; height: 18px;"><strong>COUNTRY_CODE</strong></td>
+    <td style="width: 10%; height: 18px;"><strong>CITY_NAME</strong></td>
     <td style="width: 10%; height: 18px;"><strong>COUNTRY_NAME</strong></td>
-    <td style="width: 8%; height: 18px;"><strong>REGION</strong></td>
-    <td style="width: 8%; height: 18px;"><strong>LATITUDE</strong></td>
-    <td style="width: 8%; height: 18px;"><strong>LONGITUDE</strong></td>
-    <td style="width: 24%; height: 18px;"><strong>JUSTIFICATION</strong></td>
+    <td style="width: 7%; height: 18px;"><strong>REGION</strong></td>
+    <td style="width: 7%; height: 18px;"><strong>SUBREGION</strong></td>
+    <td style="width: 7%; height: 18px;"><strong>LATITUDE</strong></td>
+    <td style="width: 7%; height: 18px;"><strong>LONGITUDE</strong></td>
+    <td style="width: 18%; height: 18px;"><strong>JUSTIFICATION</strong></td>
     </tr>`;
 
   items.forEach((item) => {
@@ -190,6 +192,7 @@ const formatRequestsAsHtmlTable = (items: BasketItem[], countries: Country[]): s
     let cityName = '';
     let countryName = '';
     let region = '';
+    let subregion = '';
     let latitude = '';
     let longitude = '';
     let justification = request.justification || '';
@@ -199,10 +202,11 @@ const formatRequestsAsHtmlTable = (items: BasketItem[], countries: Country[]): s
         dsCode = ('proposedCode' in request && request.proposedCode) ? request.proposedCode : '';
         countryCode = ('countryCode' in request && request.countryCode) ? request.countryCode : '';
         cityName = ('name' in request && request.name) ? request.name : '';
-        // Get country name and region from countries data
+        // Get country name, region, and subregion from countries data
         const addCountryInfo = countryMap.get(countryCode);
         countryName = addCountryInfo?.name || (('country' in request && request.country) ? request.country : '');
         region = addCountryInfo?.region || '';
+        subregion = addCountryInfo?.subregion || '';
         latitude = ('coordinates' in request && request.coordinates?.latitude !== undefined) 
           ? String(request.coordinates.latitude) : '';
         longitude = ('coordinates' in request && request.coordinates?.longitude !== undefined) 
@@ -215,10 +219,11 @@ const formatRequestsAsHtmlTable = (items: BasketItem[], countries: Country[]): s
         cityName = ('proposedChanges' in request && request.proposedChanges?.name) 
           ? request.proposedChanges.name 
           : ('currentData' in request && request.currentData?.name) ? request.currentData.name : '';
-        // Get country name and region from countries data
+        // Get country name, region, and subregion from countries data
         const updateCountryInfo = countryMap.get(countryCode);
         countryName = updateCountryInfo?.name || (('currentData' in request && request.currentData?.country) ? request.currentData.country : '');
         region = updateCountryInfo?.region || '';
+        subregion = updateCountryInfo?.subregion || '';
         // For updates, use proposed coordinates if available
         if ('proposedChanges' in request && request.proposedChanges?.coordinates) {
           latitude = String(request.proposedChanges.coordinates.latitude);
@@ -233,10 +238,11 @@ const formatRequestsAsHtmlTable = (items: BasketItem[], countries: Country[]): s
         dsCode = ('dutyStationCode' in request && request.dutyStationCode) ? request.dutyStationCode : '';
         countryCode = ('countryCode' in request && request.countryCode) ? request.countryCode : '';
         cityName = ('currentData' in request && request.currentData?.name) ? request.currentData.name : '';
-        // Get country name and region from countries data
+        // Get country name, region, and subregion from countries data
         const removeCountryInfo = countryMap.get(countryCode);
         countryName = removeCountryInfo?.name || (('currentData' in request && request.currentData?.country) ? request.currentData.country : '');
         region = removeCountryInfo?.region || '';
+        subregion = removeCountryInfo?.subregion || '';
         latitude = '';
         longitude = '';
         break;
@@ -245,10 +251,11 @@ const formatRequestsAsHtmlTable = (items: BasketItem[], countries: Country[]): s
         dsCode = ('dutyStationCode' in request && request.dutyStationCode) ? request.dutyStationCode : '';
         countryCode = ('countryCode' in request && request.countryCode) ? request.countryCode : '';
         cityName = ('stationName' in request && request.stationName) ? request.stationName : '';
-        // Get country name and region from countries data
+        // Get country name, region, and subregion from countries data
         const coordCountryInfo = countryMap.get(countryCode);
         countryName = coordCountryInfo?.name || '';
         region = coordCountryInfo?.region || '';
+        subregion = coordCountryInfo?.subregion || '';
         latitude = ('proposedCoordinates' in request && request.proposedCoordinates?.latitude !== undefined) 
           ? String(request.proposedCoordinates.latitude) : '';
         longitude = ('proposedCoordinates' in request && request.proposedCoordinates?.longitude !== undefined) 
@@ -257,15 +264,16 @@ const formatRequestsAsHtmlTable = (items: BasketItem[], countries: Country[]): s
     }
 
     emailTable += `<tr style="height: 18px;">
-      <td style="width: 10%; height: 18px;">${requestType}</td>
-      <td style="width: 10%; height: 18px;">${dsCode}</td>
-      <td style="width: 10%; height: 18px;">${countryCode}</td>
-      <td style="width: 12%; height: 18px;">${cityName}</td>
+      <td style="width: 8%; height: 18px;">${requestType}</td>
+      <td style="width: 8%; height: 18px;">${dsCode}</td>
+      <td style="width: 8%; height: 18px;">${countryCode}</td>
+      <td style="width: 10%; height: 18px;">${cityName}</td>
       <td style="width: 10%; height: 18px;">${countryName}</td>
-      <td style="width: 8%; height: 18px;">${region}</td>
-      <td style="width: 8%; height: 18px;">${latitude}</td>
-      <td style="width: 8%; height: 18px;">${longitude}</td>
-      <td style="width: 24%; height: 18px;">${justification}</td>
+      <td style="width: 7%; height: 18px;">${region}</td>
+      <td style="width: 7%; height: 18px;">${subregion}</td>
+      <td style="width: 7%; height: 18px;">${latitude}</td>
+      <td style="width: 7%; height: 18px;">${longitude}</td>
+      <td style="width: 18%; height: 18px;">${justification}</td>
       </tr>`;
   });
 
