@@ -289,12 +289,13 @@ const formatRequestsAsHtmlTable = (items: BasketItem[], countries: Country[]): s
  * Now includes JUSTIFICATION field
  */
 const formatRequestsAsCsv = (items: BasketItem[], countries: Country[]): string => {
-  // Create country lookup map for country name and region
-  const countryMap = new Map<string, { name: string; region: string }>();
+  // Create country lookup map for country name, region, and subregion
+  const countryMap = new Map<string, { name: string; region: string; subregion: string }>();
   countries.forEach(country => {
     countryMap.set(country.COUNTRY_CODE, {
       name: country.COUNTRY_NAME,
-      region: country.REGION || ''
+      region: country.REGION || '',
+      subregion: country.SUBREGION || ''
     });
   });
   const csvRows: string[] = [];
@@ -315,13 +316,14 @@ const formatRequestsAsCsv = (items: BasketItem[], countries: Country[]): string 
           ? String(request.coordinates.latitude) : '';
         const lng = ('coordinates' in request && request.coordinates?.longitude !== undefined) 
           ? String(request.coordinates.longitude) : '';
-        // Get country name and region from countries data
+        // Get country name, region, and subregion from countries data
         const csvAddCountryInfo = countryMap.get(countryCode);
         const countryName = csvAddCountryInfo?.name || (('country' in request && request.country) ? request.country : '');
         const region = csvAddCountryInfo?.region || '';
+        const subregion = csvAddCountryInfo?.subregion || '';
         
-        // CSV format: CITY_CODE,COUNTRY_CODE,CITY_NAME,COUNTRY_NAME,REGION,LATITUDE,LONGITUDE,COMMON_NAME,JUSTIFICATION
-        csvRows.push(`${dsCode},${countryCode},"${cityName}","${countryName}",${region},${lat},${lng},"${commonName}","${justification}"`);
+        // CSV format: CITY_CODE,CITY_NAME,CITY_COMMON_NAME,COUNTRY_CODE,COUNTRY_NAME,REGION,SUBREGION,LATITUDE,LONGITUDE,EFFECTIVE,OBSOLETE
+        csvRows.push(`${dsCode},"${cityName}","${commonName || cityName}",${countryCode},"${countryName}",${region},${subregion},${lat},${lng},"","0"`);
         break;
 
       case 'update':
@@ -353,11 +355,11 @@ const formatRequestsAsCsv = (items: BasketItem[], countries: Country[]): string 
 
   let csvSnippet = '';
   
-  // Add CSV header (now includes JUSTIFICATION)
-  if (csvRows.length > 0) {
-    csvSnippet += 'CITY_CODE,COUNTRY_CODE,CITY_NAME,COUNTRY_NAME,REGION,LATITUDE,LONGITUDE,COMMON_NAME,JUSTIFICATION\n';
-    csvSnippet += csvRows.join('\n');
-  }
+  // Add CSV header (updated to match new format with CITY_COMMON_NAME, EFFECTIVE, OBSOLETE)
+if (csvRows.length > 0) {
+  csvSnippet += 'CITY_CODE,CITY_NAME,CITY_COMMON_NAME,COUNTRY_CODE,COUNTRY_NAME,REGION,SUBREGION,LATITUDE,LONGITUDE,EFFECTIVE,OBSOLETE\n';
+  csvSnippet += csvRows.join('\n');
+}
 
   // Add instructions for non-ADD requests
   if (instructions.length > 0) {
@@ -368,9 +370,9 @@ const formatRequestsAsCsv = (items: BasketItem[], countries: Country[]): string 
 
   // Format with HTML entities like old codebase (&#13; for newline, &#9; for tab)
   return csvSnippet
-    .replace(/\r\n/g, '&#13;')
-    .replace(/\n/g, '&#13;')
-    .replace(/\r/g, '&#13;')
+    .replace(/\r\n/g, '<br>')
+    .replace(/\n/g, '<br>')
+    .replace(/\r/g, '<br>')
     .replace(/\t/g, '&#9;');
 };
 
