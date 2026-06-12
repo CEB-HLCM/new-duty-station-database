@@ -27,6 +27,7 @@ import type { SubmissionResult } from '../../schemas/dutyStationSchema';
 export interface SubmissionConfirmationProps {
   open: boolean;
   onClose: () => void;
+  onViewHistory?: () => void;
   result: SubmissionResult | null;
   requestCount?: number;
 }
@@ -38,6 +39,7 @@ export interface SubmissionConfirmationProps {
 export const SubmissionConfirmation: React.FC<SubmissionConfirmationProps> = ({
   open,
   onClose,
+  onViewHistory,
   result,
   requestCount = 0,
 }) => {
@@ -178,7 +180,7 @@ export const SubmissionConfirmation: React.FC<SubmissionConfirmationProps> = ({
       <DialogActions sx={{ px: 3, pb: 2 }}>
         {result.success ? (
           <>
-            <Button onClick={onClose} variant="outlined">
+            <Button onClick={onViewHistory || onClose} variant="outlined">
               View History
             </Button>
             <Button onClick={onClose} variant="contained" autoFocus>

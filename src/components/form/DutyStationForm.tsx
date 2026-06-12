@@ -510,6 +510,7 @@ export const DutyStationForm: React.FC<DutyStationFormProps> = ({
                     type="email"
                     fullWidth
                     required
+                    autoComplete="nope"
                     error={!!fieldState.error}
                     helperText={fieldState.error?.message || 'Saved for future requests'}
                   />

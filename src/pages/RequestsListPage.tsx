@@ -1,15 +1,19 @@
-// Requests List Page - Shows current basket of pending requests
+// Requests List Page - Shows current basket of pending requests and submission history
 import { Container, Typography, Box, Grid, Alert, Chip, Snackbar } from '@mui/material';
 import { WarningAmber as WarningIcon } from '@mui/icons-material';
 import { RequestBasket } from '../components/basket/RequestBasket';
+import { RequestHistory } from '../components/basket/RequestHistory';
 import { SubmissionConfirmation } from '../components/email/SubmissionConfirmation';
 import { useBasket } from '../hooks/useBasket';
-import { useState } from 'react';
+import { useData } from '../context/DataContext';
+import { useState, useEffect, useCallback } from 'react';
+import { loadHistory } from '../services/basketService';
 import type { SubmissionResult } from '../schemas/dutyStationSchema';
+import type { RequestHistoryEntry } from '../types/request';
 
 /**
  * Requests List Page Component
- * Displays the current basket of pending requests that need to be sent to CEB dev team
+ * Displays the current basket of pending requests and submission history
  */
 export const RequestsListPage: React.FC = () => {
   const [snackbar, setSnackbar] = useState<{
@@ -23,6 +27,7 @@ export const RequestsListPage: React.FC = () => {
   });
   const [submissionResult, setSubmissionResult] = useState<SubmissionResult | null>(null);
   const [showConfirmation, setShowConfirmation] = useState(false);
+  const [history, setHistory] = useState<RequestHistoryEntry[]>([]);
 
   const {
     basket,
@@ -35,14 +40,39 @@ export const RequestsListPage: React.FC = () => {
     isEmailConfigured,
   } = useBasket();
 
+  const { getDutyStationByCode, isDataLoaded } = useData();
+
+  // Load history and cross-check with duty stations data
+  const refreshHistory = useCallback(() => {
+    const loadedHistory = loadHistory();
+
+    // Cross-check: if dutyStationCode exists in GitHub data, mark as 'processed'
+    const enriched = loadedHistory.map(entry => {
+      if (entry.status !== 'submitted') return entry;
+      if (!entry.dutyStationCode) return entry;
+
+      const exists = isDataLoaded && getDutyStationByCode(entry.dutyStationCode);
+      if (exists) {
+        return { ...entry, status: 'processed' as const };
+      }
+      return entry;
+    });
+
+    setHistory(enriched);
+  }, [isDataLoaded, getDutyStationByCode]);
+
+  useEffect(() => {
+    refreshHistory();
+  }, [refreshHistory]);
+
+  // Refresh history after submission
   const handleBasketSubmit = async () => {
     try {
-      const requestCount = basket.length;
       const result = await submitBasket();
-      
-      // Show submission confirmation dialog
       setSubmissionResult(result);
       setShowConfirmation(true);
+      // Reload history after items move from basket to history
+      setTimeout(refreshHistory, 100);
     } catch (error) {
       setSnackbar({
         open: true,
@@ -54,8 +84,7 @@ export const RequestsListPage: React.FC = () => {
 
   const handleConfirmationClose = () => {
     setShowConfirmation(false);
-    
-    // Clear result after a delay
+    refreshHistory();
     setTimeout(() => setSubmissionResult(null), 300);
   };
 
@@ -82,6 +111,7 @@ export const RequestsListPage: React.FC = () => {
           </Typography>
           <Typography variant="body1" color="text.secondary">
             View and manage your pending duty station requests. These requests will be sent to the CEB dev team for processing.
+            If a request shows as "Processed" in the history below, it means the duty station code has been successfully added to the CEB Secretariat Duty Station database.
           </Typography>
 
           {/* Statistics Chips */}
@@ -146,6 +176,11 @@ export const RequestsListPage: React.FC = () => {
             />
           </Grid>
         </Grid>
+
+        {/* Request History */}
+        <Box sx={{ mt: 4 }}>
+          <RequestHistory history={history} />
+        </Box>
 
         {/* Snackbar for notifications */}
         <Snackbar

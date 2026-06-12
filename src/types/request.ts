@@ -1,5 +1,4 @@
 // Request-related TypeScript interfaces
-import type { DutyStation } from './dutyStation';
 
 /**
  * Request type enumeration
@@ -9,7 +8,7 @@ export type RequestType = 'add' | 'update' | 'remove' | 'coordinate_update';
 /**
  * Request status
  */
-export type RequestStatus = 'pending' | 'submitted' | 'approved' | 'rejected';
+export type RequestStatus = 'pending' | 'submitted' | 'approved' | 'rejected' | 'processed';
 
 /**
  * Base request interface
@@ -41,6 +40,9 @@ export interface RequestHistoryEntry {
   submittedAt: Date;
   confirmationId?: string;
   status: RequestStatus;
+  dutyStationCode?: string;
+  countryCode?: string;
+  stationName?: string;
 }
 
 /**

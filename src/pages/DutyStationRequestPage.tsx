@@ -17,6 +17,7 @@ import {
   List as ListIcon,
   WarningAmber as WarningIcon,
 } from '@mui/icons-material';
+import { useNavigate } from 'react-router-dom';
 import { DutyStationForm } from '../components/form/DutyStationForm';
 import { RequestBasket } from '../components/basket/RequestBasket';
 import { SubmissionConfirmation } from '../components/email/SubmissionConfirmation';
@@ -46,6 +47,7 @@ const TabPanel: React.FC<TabPanelProps> = ({ children, value, index }) => {
  * Duty Station Request Page Component
  */
 export const DutyStationRequestPage: React.FC = () => {
+  const navigate = useNavigate();
   const [currentTab, setCurrentTab] = useState(0);
   const [snackbar, setSnackbar] = useState<{
     open: boolean;
@@ -257,6 +259,7 @@ export const DutyStationRequestPage: React.FC = () => {
         <SubmissionConfirmation
           open={showConfirmation}
           onClose={handleConfirmationClose}
+          onViewHistory={() => navigate('/requests-list')}
           result={submissionResult}
           requestCount={submissionResult ? basket.length : 0}
         />

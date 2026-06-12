@@ -229,11 +229,58 @@ export const saveHistory = (history: RequestHistoryEntry[]): void => {
 };
 
 /**
+ * Clear entire request history
+ */
+export const clearHistory = (): void => {
+  localStorage.removeItem(HISTORY_STORAGE_KEY);
+};
+
+/**
+ * Extract duty station info from a request for history storage
+ */
+const extractDutyStationInfo = (request: DutyStationRequest): {
+  dutyStationCode?: string;
+  countryCode?: string;
+  stationName?: string;
+} => {
+  switch (request.requestType) {
+    case 'add':
+      return {
+        dutyStationCode: request.proposedCode || undefined,
+        countryCode: request.countryCode,
+        stationName: request.name,
+      };
+    case 'update':
+      return {
+        dutyStationCode: request.dutyStationCode,
+        countryCode: request.countryCode,
+        stationName: request.proposedChanges?.name || request.currentData?.name,
+      };
+    case 'remove':
+      return {
+        dutyStationCode: request.dutyStationCode,
+        countryCode: request.countryCode,
+        stationName: request.currentData?.name,
+      };
+    case 'coordinate_update':
+      return {
+        dutyStationCode: request.dutyStationCode,
+        countryCode: request.countryCode,
+        stationName: request.stationName,
+      };
+    default:
+      return {};
+  }
+};
+
+/**
  * Add entry to request history
  */
-export const addToHistory = (item: BasketItem, confirmationId?: string): void => {
+export const addToHistory = (item: BasketItem): void => {
   const history = loadHistory();
   
+  const dsInfo = extractDutyStationInfo(item.request);
+
   const entry: RequestHistoryEntry = {
     id: item.id,
     request: {
@@ -243,11 +290,11 @@ export const addToHistory = (item: BasketItem, confirmationId?: string): void =>
       submittedBy: item.request.submittedBy,
       organization: item.request.organization,
       justification: item.request.justification,
-      status: item.status,
+      status: 'submitted',
     },
     submittedAt: new Date(),
-    confirmationId,
     status: 'submitted',
+    ...dsInfo,
   };
 
   history.unshift(entry); // Add to beginning
@@ -294,6 +341,11 @@ export const submitBasket = async (items: BasketItem[]): Promise<SubmissionResul
     if (!emailResult.success) {
       return emailResult;
     }
+
+    // Save all submitted items to history before removing from basket
+    items.forEach(item => {
+      addToHistory(item);
+    });
 
     // Remove submitted items from basket
     const currentBasket = loadBasket();

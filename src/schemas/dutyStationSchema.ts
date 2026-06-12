@@ -167,7 +167,7 @@ export interface BasketItem {
   request: DutyStationRequest;
   addedAt: Date;
   priority: number;
-  status: 'pending' | 'submitted' | 'approved' | 'rejected';
+  status: 'pending' | 'submitted' | 'approved' | 'rejected' | 'processed';
 }
 
 /**
