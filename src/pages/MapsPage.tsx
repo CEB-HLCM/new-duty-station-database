@@ -28,6 +28,16 @@ import { useGeolocation } from '../hooks/useGeolocation';
 import { geocodeAddress } from '../services/geocodingService';
 import type { DutyStation, MapCoordinates } from '../types/dutyStation';
 
+// Normalize text for search: lowercase + strip diacritics
+function normalizeText(text: string): string {
+  return text
+    .toLowerCase()
+    .trim()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .normalize('NFC');
+}
+
 function MapsPage() {
   const navigate = useNavigate();
   const { dutyStations, countries, loading, error, refreshData } = useAppData();
@@ -66,14 +76,14 @@ function MapsPage() {
   const searchResults = useMemo(() => {
     if (!searchQuery) return [];
     
-    const query = searchQuery.toLowerCase();
+    const query = normalizeText(searchQuery);
     
     // Filter stations matching the query
     const matchedStations = dutyStations.filter(station => 
-      station.CITY_NAME.toLowerCase().includes(query) ||
-      station.COUNTRY?.toLowerCase().includes(query) ||
-      station.CITY_CODE.toLowerCase().includes(query) ||
-      station.CITY_COMMON_NAME.toLowerCase().includes(query)
+      normalizeText(station.CITY_NAME).includes(query) ||
+      (station.COUNTRY && normalizeText(station.COUNTRY).includes(query)) ||
+      normalizeText(station.CITY_CODE).includes(query) ||
+      normalizeText(station.CITY_COMMON_NAME).includes(query)
     );
     
     // Sort by relevance:
@@ -84,10 +94,10 @@ function MapsPage() {
     // 5. Everything else alphabetically
     return matchedStations
       .sort((a, b) => {
-        const aName = a.CITY_NAME.toLowerCase();
-        const bName = b.CITY_NAME.toLowerCase();
-        const aCountry = (a.COUNTRY || '').toLowerCase();
-        const bCountry = (b.COUNTRY || '').toLowerCase();
+        const aName = normalizeText(a.CITY_NAME);
+        const bName = normalizeText(b.CITY_NAME);
+        const aCountry = normalizeText(a.COUNTRY || '');
+        const bCountry = normalizeText(b.COUNTRY || '');
         
         // Exact NAME matches first
         if (aName === query && bName !== query) return -1;

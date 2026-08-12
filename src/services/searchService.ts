@@ -6,6 +6,17 @@ import soundex from 'soundex';
 import type { DutyStation } from '../types';
 import { SearchType, type SearchOptions, type SearchResult, type SearchFilters } from '../types/search';
 
+// Normalize text for search: lowercase + trim + Unicode normalization
+// Handles cases where diacritics might differ (e.g. ü vs u)
+function normalizeText(text: string): string {
+  return text
+    .toLowerCase()
+    .trim()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '') // strip diacritics for comparison
+    .normalize('NFC');
+}
+
 // Fuse.js configuration for fuzzy search
 // Updated to use new CSV field names (December 2025)
 const fuseOptions: IFuseOptions<DutyStation> = {
@@ -55,9 +66,9 @@ function exactSearch(
   query: string, 
   fields: (keyof DutyStation)[] = ['CITY_NAME', 'CITY_COMMON_NAME', 'COUNTRY']
 ): SearchResult<DutyStation>[] {
-  const lowerQuery = query.toLowerCase().trim();
+  const normalizedQuery = normalizeText(query);
   
-  if (!lowerQuery) return [];
+  if (!normalizedQuery) return [];
   
   const results: SearchResult<DutyStation>[] = [];
   
@@ -66,7 +77,7 @@ function exactSearch(
     const exactMatches = fields.filter(field => {
       const fieldValue = item[field];
       if (typeof fieldValue === 'string') {
-        return fieldValue.toLowerCase() === lowerQuery;
+        return normalizeText(fieldValue) === normalizedQuery;
       }
       return false;
     });
@@ -93,9 +104,9 @@ function partialSearch(
   query: string, 
   fields: (keyof DutyStation)[] = ['CITY_NAME', 'CITY_COMMON_NAME', 'COUNTRY']
 ): SearchResult<DutyStation>[] {
-  const lowerQuery = query.toLowerCase().trim();
+  const normalizedQuery = normalizeText(query);
   
-  if (!lowerQuery) return [];
+  if (!normalizedQuery) return [];
   
   const results: SearchResult<DutyStation>[] = [];
   
@@ -106,18 +117,18 @@ function partialSearch(
     fields.forEach(field => {
       const fieldValue = item[field];
       if (typeof fieldValue === 'string') {
-        const lowerFieldValue = fieldValue.toLowerCase();
-        const index = lowerFieldValue.indexOf(lowerQuery);
+        const normalizedField = normalizeText(fieldValue);
+        const index = normalizedField.indexOf(normalizedQuery);
         
         if (index !== -1) {
           // Calculate score based on position and length
-          const score = index / lowerFieldValue.length;
+          const score = index / normalizedField.length;
           if (score < bestScore) bestScore = score;
           
           matches.push({
             field: field as string,
             value: fieldValue,
-            indices: [[index, index + lowerQuery.length - 1]] as [number, number][],
+            indices: [[index, index + normalizedQuery.length - 1]] as [number, number][],
           });
         }
       }
@@ -270,23 +281,23 @@ export function getSearchSuggestions(
 ): string[] {
   if (!query.trim() || query.length < 2) return [];
   
-  const lowerQuery = query.toLowerCase();
+  const normalizedQuery = normalizeText(query);
   const suggestions = new Set<string>();
   
   // Collect suggestions from different fields
   data.forEach(station => {
     // Name suggestions
-    if (station.CITY_NAME.toLowerCase().includes(lowerQuery)) {
+    if (normalizeText(station.CITY_NAME).includes(normalizedQuery)) {
       suggestions.add(station.CITY_NAME);
     }
     
     // Common name suggestions
-    if (station.CITY_COMMON_NAME && station.CITY_COMMON_NAME.toLowerCase().includes(lowerQuery)) {
+    if (station.CITY_COMMON_NAME && normalizeText(station.CITY_COMMON_NAME).includes(normalizedQuery)) {
       suggestions.add(station.CITY_COMMON_NAME);
     }
     
     // Country suggestions
-    if (station.COUNTRY && station.COUNTRY.toLowerCase().includes(lowerQuery)) {
+    if (station.COUNTRY && normalizeText(station.COUNTRY).includes(normalizedQuery)) {
       suggestions.add(station.COUNTRY);
     }
   });
@@ -295,8 +306,8 @@ export function getSearchSuggestions(
     .slice(0, maxSuggestions)
     .sort((a, b) => {
       // Prioritize suggestions that start with the query
-      const aStarts = a.toLowerCase().startsWith(lowerQuery);
-      const bStarts = b.toLowerCase().startsWith(lowerQuery);
+      const aStarts = normalizeText(a).startsWith(normalizedQuery);
+      const bStarts = normalizeText(b).startsWith(normalizedQuery);
       
       if (aStarts && !bStarts) return -1;
       if (!aStarts && bStarts) return 1;

@@ -59,7 +59,11 @@ export async function fetchDutyStations(): Promise<DutyStation[]> {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
     
-    const csvText = await response.text();
+    // CSV is encoded in ISO-8859-1/Windows-1254 (e.g. Türkiye uses 0xFC for ü)
+    // fetch().text() assumes UTF-8 and corrupts non-ASCII chars, so decode manually
+    const buffer = await response.arrayBuffer();
+    const decoder = new TextDecoder('windows-1254');
+    const csvText = decoder.decode(buffer);
     const rawData = parseCSV(csvText);
     
     // Transform raw CSV data to DutyStation interface
@@ -97,7 +101,11 @@ export async function fetchCountries(): Promise<Country[]> {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
     
-    const csvText = await response.text();
+    // CSV is encoded in ISO-8859-1/Windows-1254 (e.g. Türkiye uses 0xFC for ü)
+    // fetch().text() assumes UTF-8 and corrupts non-ASCII chars, so decode manually
+    const buffer = await response.arrayBuffer();
+    const decoder = new TextDecoder('windows-1254');
+    const csvText = decoder.decode(buffer);
     const rawData = parseCSV(csvText);
     
     // DEBUG: Log the first few rows to see actual structure

@@ -2,6 +2,16 @@ import { useMemo } from 'react';
 import { useData } from '../context/DataContext';
 import type { DutyStation, DutyStationFilters, PaginatedResults, PaginationOptions } from '../types';
 
+// Normalize text for search: lowercase + strip diacritics
+function normalizeText(text: string): string {
+  return text
+    .toLowerCase()
+    .trim()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .normalize('NFC');
+}
+
 // Custom hook for app-wide data management
 export function useAppData() {
   const dataContext = useData();
@@ -13,19 +23,19 @@ export function useAppData() {
 
       // Apply search text filter
       if (filters.searchText && filters.searchText.trim()) {
-        const searchText = filters.searchText.toLowerCase().trim();
+        const searchText = normalizeText(filters.searchText);
         const searchField = filters.searchField || 'CITY_NAME';
 
         filtered = filtered.filter(station => {
           switch (searchField) {
             case 'CITY_NAME':
-              return station.CITY_NAME.toLowerCase().includes(searchText);
+              return normalizeText(station.CITY_NAME).includes(searchText);
             case 'COUNTRY':
-              return station.COUNTRY?.toLowerCase().includes(searchText) || false;
+              return station.COUNTRY ? normalizeText(station.COUNTRY).includes(searchText) : false;
             case 'CITY_COMMON_NAME':
-              return station.CITY_COMMON_NAME.toLowerCase().includes(searchText);
+              return normalizeText(station.CITY_COMMON_NAME).includes(searchText);
             default:
-              return station.CITY_NAME.toLowerCase().includes(searchText);
+              return normalizeText(station.CITY_NAME).includes(searchText);
           }
         });
       }
@@ -99,12 +109,12 @@ export function useAppData() {
         return dataContext.dutyStations;
       }
 
-      const term = searchTerm.toLowerCase();
+      const term = normalizeText(searchTerm);
       return dataContext.dutyStations.filter(station => {
         return searchFields.some(field => {
           const fieldValue = station[field];
           if (typeof fieldValue === 'string') {
-            return fieldValue.toLowerCase().includes(term);
+            return normalizeText(fieldValue).includes(term);
           }
           return false;
         });
