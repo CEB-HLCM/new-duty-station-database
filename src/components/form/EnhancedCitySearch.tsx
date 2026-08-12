@@ -228,19 +228,10 @@ export const EnhancedCitySearch: React.FC<EnhancedCitySearchProps> = ({
 
   // Handle manual entry mode activation
   const handleManualEntry = () => {
-    console.log('[Manual Entry] Button clicked, lastSearchTerm:', lastSearchTerm, 'length:', lastSearchTerm?.length);
-    if (!onManualEntry) {
-      console.error('[Manual Entry] onManualEntry callback not provided!');
-      return;
-    }
-    if (!lastSearchTerm || lastSearchTerm.length < 2) {
-      console.error('[Manual Entry] Search term too short:', lastSearchTerm);
-      return;
-    }
-    
-    console.log('[Manual Entry] Activating manual mode for:', lastSearchTerm);
+    if (!onManualEntry) return;
+    if (!lastSearchTerm || lastSearchTerm.length < 2) return;
+
     setManualEntryMode(true);
-    setShowNoResultsHelp(false);
     onManualEntry(lastSearchTerm);
   };
 
@@ -253,6 +244,7 @@ export const EnhancedCitySearch: React.FC<EnhancedCitySearchProps> = ({
         onChange={handleSelect}
         inputValue={inputValue}
         onInputChange={(_, value) => setInputValue(value)}
+        clearOnBlur={false}
         getOptionLabel={(option) => option.name}
         filterOptions={(x) => x} // Disable default filtering (we filter server-side)
         isOptionEqualToValue={(option, value) =>
@@ -350,6 +342,32 @@ export const EnhancedCitySearch: React.FC<EnhancedCitySearchProps> = ({
             ? 'Type at least 2 characters to search local database'
             : loading
             ? 'Searching local database and external sources...'
+            : showNoResultsHelp || manualEntryMode
+            ? (
+              <Box sx={{ py: 1 }}>
+                <Typography variant="body2" color="text.secondary">
+                  {manualEntryMode
+                    ? `Manual entry mode for "${lastSearchTerm}"`
+                    : 'No cities found - check spelling or country selection'
+                  }
+                </Typography>
+                {!manualEntryMode && (
+                  <Button
+                    variant="outlined"
+                    size="small"
+                    startIcon={<MapIcon />}
+                    onMouseDown={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                    }}
+                    onClick={handleManualEntry}
+                    sx={{ mt: 1 }}
+                  >
+                    Enter Manually
+                  </Button>
+                )}
+              </Box>
+            )
             : 'No cities found - check spelling or country selection'
         }
       />
@@ -398,33 +416,6 @@ export const EnhancedCitySearch: React.FC<EnhancedCitySearchProps> = ({
             {options.filter(o => !(o as ExtendedCitySearchResult).isDuplicate).length} new cities.
             <br />
             <strong>⚠️ You can only request NEW cities.</strong> Existing cities are blocked to prevent duplicates.
-          </Typography>
-        </Alert>
-      )}
-
-      {/* Manual Entry Option - shown when no results found */}
-      {showNoResultsHelp && !manualEntryMode && (
-        <Alert
-          severity="warning"
-          sx={{ mt: 1 }}
-          action={
-            <Button
-              color="inherit"
-              size="small"
-              startIcon={<MapIcon />}
-              onClick={handleManualEntry}
-            >
-              Enter Manually
-            </Button>
-          }
-        >
-          <Typography variant="subtitle2" gutterBottom>
-            <strong>Location Not Found</strong>
-          </Typography>
-          <Typography variant="caption">
-            The geocoding service couldn't find "<strong>{lastSearchTerm}</strong>". 
-            <br />
-            Click "Enter Manually" to proceed with manual coordinate selection on the map.
           </Typography>
         </Alert>
       )}

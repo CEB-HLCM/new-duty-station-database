@@ -155,9 +155,24 @@ export const searchCitiesNominatim = async (
             return false;
           }
           
-          // Must match the country name (partial match for flexibility)
-          // e.g., "Jamaica" matches "jamaica" or "United States" matches "united states"
-          if (!resultCountry.includes(searchCountry) && !searchCountry.includes(resultCountry)) {
+          // Strip diacritics for comparison (e.g., "Türkiye" vs "Turkey")
+          const stripDiacritics = (s: string) => s.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+          const normalizedResult = stripDiacritics(resultCountry);
+          const normalizedSearch = stripDiacritics(searchCountry);
+
+          // Country name variant mapping (e.g., Nominatim uses "Turkey", CSV uses "Türkiye")
+          const countryAliases: Record<string, string> = {
+            'turkiye': 'turkey',
+            'cote divoire': 'ivory coast',
+            'czech republic': 'czechia',
+            'swaziland': 'eswatini',
+            'burma': 'myanmar',
+            'macedonia': 'north macedonia',
+            'cape verde': 'cabo verde',
+          };
+          const resolveCountry = (name: string) => countryAliases[name] || name;
+
+          if (resolveCountry(normalizedResult) !== resolveCountry(normalizedSearch)) {
             return false;
           }
         }
@@ -176,8 +191,9 @@ export const searchCitiesNominatim = async (
         
         // Accept if type is valid OR if it's a place/boundary (less restrictive)
         return validTypes.includes(resultType) || resultClass === 'place' || resultClass === 'boundary';
-      })
-      .map((result: any): CitySearchResultWithImportance => {
+      });
+
+      const mapped = filtered.map((result: any): CitySearchResultWithImportance => {
         const displayName = result.display_name || '';
         const parts = displayName.split(',').map((p: string) => p.trim());
         const cityName = parts[0] || result.name;
@@ -201,7 +217,7 @@ export const searchCitiesNominatim = async (
       });
     
     // Deduplicate by name and coordinate proximity (within ~5km = 0.05 degrees)
-    const deduplicated = filtered.reduce((acc: CitySearchResultWithImportance[], current: CitySearchResultWithImportance) => {
+    const deduplicated = mapped.reduce((acc: CitySearchResultWithImportance[], current: CitySearchResultWithImportance) => {
       const isDuplicate = acc.some(item => 
         item.name === current.name &&
         Math.abs(item.coordinates.latitude - current.coordinates.latitude) < 0.05 &&

@@ -41,6 +41,14 @@ export const CoordinatePicker = ({
 
   const { getCurrentPosition, coordinates: geoCoordinates } = useGeolocation();
 
+  // Sync marker position when initialCoordinates changes (e.g. new city selected)
+  useEffect(() => {
+    if (initialCoordinates) {
+      setPickedLocation(initialCoordinates);
+      setAddress('');
+    }
+  }, [initialCoordinates?.latitude, initialCoordinates?.longitude]);
+
   const map = useMapEvents({
     click: async (e) => {
       const coords: MapCoordinates = {

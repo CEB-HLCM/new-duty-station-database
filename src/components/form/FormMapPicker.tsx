@@ -1,5 +1,6 @@
 // Form Map Picker - Wraps CoordinatePicker with MapContainer for form usage
-import { MapContainer, TileLayer } from 'react-leaflet';
+import { useEffect } from 'react';
+import { MapContainer, TileLayer, useMap } from 'react-leaflet';
 import { CoordinatePicker } from '../mapping/CoordinatePicker';
 import type { MapCoordinates } from '../../types/dutyStation';
 import 'leaflet/dist/leaflet.css';
@@ -7,6 +8,17 @@ import 'leaflet/dist/leaflet.css';
 interface FormMapPickerProps {
   onLocationSelect: (latitude: number, longitude: number) => void;
   initialCenter?: { latitude: number; longitude: number };
+}
+
+// Internal component that syncs map center with prop changes
+function MapCenterUpdater({ center }: { center: { latitude: number; longitude: number } }) {
+  const map = useMap();
+  useEffect(() => {
+    if (center.latitude !== 0 || center.longitude !== 0) {
+      map.setView([center.latitude, center.longitude], map.getZoom());
+    }
+  }, [center.latitude, center.longitude, map]);
+  return null;
 }
 
 /**
@@ -32,6 +44,7 @@ export const FormMapPicker: React.FC<FormMapPickerProps> = ({
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
       />
+      <MapCenterUpdater center={initialCenter} />
       <CoordinatePicker
         onLocationPicked={handleLocationPicked}
         initialCoordinates={initialCenter}
