@@ -155,14 +155,16 @@ export const searchCitiesNominatim = async (
             return false;
           }
           
-          // Strip diacritics for comparison (e.g., "Türkiye" vs "Turkey")
-          const stripDiacritics = (s: string) => s.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-          const normalizedResult = stripDiacritics(resultCountry);
-          const normalizedSearch = stripDiacritics(searchCountry);
+          // Strip diacritics and normalize spaces for comparison
+          // (e.g., "Türkiye" vs "Turkey", "Viet Nam" vs "Vietnam")
+          const normalize = (s: string) => s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/\s+/g, ' ').trim();
+          const normalizedResult = normalize(resultCountry);
+          const normalizedSearch = normalize(searchCountry);
 
           // Country name variant mapping (e.g., Nominatim uses "Turkey", CSV uses "Türkiye")
           const countryAliases: Record<string, string> = {
             'turkiye': 'turkey',
+            'viet nam': 'vietnam',
             'cote divoire': 'ivory coast',
             'czech republic': 'czechia',
             'swaziland': 'eswatini',
