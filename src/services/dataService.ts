@@ -59,10 +59,10 @@ export async function fetchDutyStations(): Promise<DutyStation[]> {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
     
-    // CSV is encoded in ISO-8859-1/Windows-1254 (e.g. Türkiye uses 0xFC for ü)
-    // fetch().text() assumes UTF-8 and corrupts non-ASCII chars, so decode manually
+    // CSV is UTF-8 encoded (e.g. "São José", "ü" as multi-byte sequences)
+    // Decode manually from the raw buffer to be explicit about the encoding
     const buffer = await response.arrayBuffer();
-    const decoder = new TextDecoder('windows-1254');
+    const decoder = new TextDecoder('utf-8');
     const csvText = decoder.decode(buffer);
     const rawData = parseCSV(csvText);
     
@@ -101,10 +101,10 @@ export async function fetchCountries(): Promise<Country[]> {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
     
-    // CSV is encoded in ISO-8859-1/Windows-1254 (e.g. Türkiye uses 0xFC for ü)
-    // fetch().text() assumes UTF-8 and corrupts non-ASCII chars, so decode manually
+    // CSV is UTF-8 encoded (e.g. "Côte d'Ivoire" as multi-byte sequences)
+    // Decode manually from the raw buffer to be explicit about the encoding
     const buffer = await response.arrayBuffer();
-    const decoder = new TextDecoder('windows-1254');
+    const decoder = new TextDecoder('utf-8');
     const csvText = decoder.decode(buffer);
     const rawData = parseCSV(csvText);
     
